@@ -1,7 +1,0 @@
-Der WPCar Sync ist ein Premium-WordPress-Plugin, das wir für fiat-amann.de verwenden. Da sich das Plugin ständig selbst aktualisiert, hat unser Kunde Probleme. Obwohl wir die automatische Aktualisierung überall deaktiviert haben, aktualisiert es sich ständig selbst, und wir haben keine Lizenz für die aktuelle Version, was zu ständigen Problemen führt.
-Würden Sie bitte die Firma WPCar Sync anrufen und sich bezüglich des Problems erkundigen.
-06894 9660130
-Vielen Dank
-
-Wir haben eine Lizenz für die Version 3.1.4 und haben das Paket 'Einmalzahlung - Danach funktioniert das Plugin weiter, Updates sind aber nicht mehr möglich.' Allerdings aktualisiert sich das Plugin automatisch auf Version 3.2, für die wir keine Lizenz haben, daher funktioniert das System nicht.
-
