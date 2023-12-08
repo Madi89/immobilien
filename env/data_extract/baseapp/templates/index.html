@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Startseite{% endblock %}
+
+{% block content %}
+{% if messages %}
+<div class="alert alert-danger error-message" id="error-message">
+    <ul>
+        {% for message in messages %}
+        <li>{{ message }}</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+<section id="objectDetailsContent" class="section_obj_details">
+
+    <br>
+    <h5>Zuletzt veröffentlichte Termine</h5>
+    <br>
+
+    <table class="display_table">
+        <thead>
+            <tr>
+                <th class="object">Objekt</th>
+                <th>Termin</th>
+                <th>Objektlink</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for header, obj_txt, obj_linktxt, date, url in data1 %}
+            <tr class="row">
+                <td>
+                    <div class="txt">
+                        <strong>
+                            <a class="header-link" href="{% url 'object_details' forloop.counter0 %}" title="Objektdetails">{{ header }}<br></a>
+                        </strong>
+                        {{ obj_txt }}<br>
+                        {{ obj_linktxt }}
+                    </div>
+                </td>
+                <td class="date">{{ date }}</td>
+                <td class="link"><a href="{{ url }}" title="Objektlink" target="_blank"><span class="material-symbols-outlined">Link</span></a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>   
+</section>
+{% endblock %}
+<style>
+    .custom-dropdown {
+        display: inline-block;
+        position: relative;
+    }
+    .custom-dropdown select {
+        display: none;
+    }
+    .custom-dropdown .checkbox-list {
+        display: none;
+        position: absolute;
+        border: 1px solid #ccc;
+        background-color: #fff;
+    }
+</style>

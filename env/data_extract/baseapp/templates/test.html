@@ -1,0 +1,240 @@
+{% extends "base.html" %}
+
+{% block title %}Detailsuche{% endblock %}
+
+{% block content %}
+<section class="section_bdl_select">
+    <div class="section_detail_search">
+    <h5>Objektsuche</h5>
+        <form class="form-detail" name="search" method="post" onsubmit="submitForm();" action="{% url 'test_liste' %}">
+            {% csrf_token %}
+            <table class="table_objektsuche">
+                <tbody>
+                    <tr>
+                        <td>
+                            <label for="bundesland"><Strong>Bundesland:<sup><font color="red">*</font></sup></Strong></label>
+                            <select class="inputfield" name="land_abk" id="bundesland" onchange="updateStaedteOptions()">
+                                {% for option in bdl_data %}
+                                    <option value="{{ option.value }}">{{ option.text }}</option>
+                                {% endfor %}
+                            </select>
+                        </td>
+                        <td>
+                            <label for="stadt"><Strong>Stadt:<sup><font color="red">*</font></sup></Strong></label>
+                            <select class="inputfield" name="ger_id" id="stadt">
+                                <!-- Die Städte werden hier dynamisch eingefügt -->
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <label for="objektart"><Strong>Objektart:</Strong></label>
+                            <input class="inputfield1" name="obj" id="obj" size="50" placeholder="Eigene Beschreibung">
+                        </td>
+
+                    </tr>
+                    <tr>
+                        <td>
+                            <label>Alle Kategorien</label><br>
+                            <select class="select-facet" name="obj_liste" id="obj_liste" class="facet-list" multiple>                                    
+                            {% for option in object_data %}
+                               <option class="facet" value="{{ option.value }}">{{ option.text }}</option>
+                            {% endfor %}
+                            </select>
+                        </td>
+                        <td>                   
+                            <label>Ihre Auswahl</label><br>
+                            <select class="select-facet" name="obj_arr[]" id="obj_arr" class="facet-list" multiple>
+                            </select>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="form-last-row">
+                <button type="reset" onclick="reset_form()">Zurücksetzen</button>
+                <button type="submit">Suchen</button>
+            </div>
+        </form>
+    </div>
+    <div class="section_detail_search">
+        <h3>Letzten gespeicherten Suchanfragen: </h3>
+    </div>
+</section>
+
+
+<style>
+    .select-facet,
+    .facet{
+        border: 1px solid var(--color-dark-variant);
+        border-radius: 5px;  
+        padding: 5px;
+    }
+
+    .facet {
+        margin: 5px auto;
+        transition: transform 0.3s ease-in-out;
+        cursor: pointer;
+    }
+
+    .facet:hover {
+        background: var(--color-white);
+        transform: scale(1.015);
+    }
+
+    .right,
+    .left {
+        display: inline-block;
+        vertical-align: top;
+        padding: 10px;
+    }
+</style>
+
+
+<script>
+    function submitForm() {
+
+        const express = require('express');
+        const fetch = require('node-fetch');
+        const app = express();
+
+        app.use('/proxy', async (req, res) => {
+        const response = await fetch('https://www.zvg-portal.de' + req.url);
+        const data = await response.json();
+        res.json(data);
+        });
+
+        app.listen(8000, () => {
+        console.log('Proxy server is running on port 8000');
+        });
+
+        var bundeslandDropdown = document.getElementById('bundesland');
+        var stadtDropdown = document.getElementById('stadt');
+        var objInput = document.getElementById('obj');
+        var objArrList = document.querySelectorAll('#obj_arr li');
+        var selectedStadtText = stadtDropdown.options[stadtDropdown.selectedIndex].text;
+        var objText = objInput.value;
+
+        var form_data = new FormData();
+        form_data.append('ger_name', selectedStadtText);
+        form_data.append('order_by', '2');
+        form_data.append('land_abk', bundeslandDropdown.value);
+        form_data.append('ger_id', stadtDropdown.value);
+        form_data.append('obj', objText);
+
+        var objArrDropdown = document.getElementById('obj_arr');
+        var selectedObjArrValues = Array.from(objArrDropdown.options)
+            .filter(option => option.selected)
+            .map(option => option.value);
+
+        selectedObjArrValues.forEach(value => {
+            form_data.append('obj_arr[]', value);
+        });
+
+        var csrfToken = document.getElementsByName('csrfmiddlewaretoken')[0].value;
+        form_data.append('csrfmiddlewaretoken', csrfToken);
+
+        fetch('https://www.zvg-portal.de/index.php?button=Suchen', {
+            method: 'POST',
+            body: form_data,
+            headers: new Headers({
+                'X-CSRFToken': csrfToken,
+            }),
+        })
+        .then(response => response.json())
+        .then(data => {
+                console.log(data);
+        })
+        .catch(error => {
+                console.error('Error:', error);
+        });
+
+        window.location.href = '/test_liste/';
+    
+        return true;
+    }
+</script>
+<script>
+    var bdl_data = {{ bdl_data|safe }};
+</script>
+<script>
+    function updateStaedteOptions() {
+
+        var bundeslandDropdown = document.getElementById('bundesland');
+        var selectedBundesland = bundeslandDropdown.value;
+        var staedteDropdown = document.getElementById('stadt');
+
+        staedteDropdown.innerHTML = '';
+     
+        var defaultOption = document.createElement('option');
+        defaultOption.value = "0";
+        defaultOption.text = "-- Alle Amtsgerichte --";
+        staedteDropdown.appendChild(defaultOption);
+    
+        var selectedBundeslandData = bdl_data.find(function (item) {
+            return item.value === selectedBundesland;
+        });
+        if (selectedBundeslandData) {
+            selectedBundeslandData.staedte.forEach(function (stadt) {
+                var newOption = document.createElement('option');
+                newOption.value = stadt.id;  
+                newOption.text = stadt.name; 
+                staedteDropdown.appendChild(newOption);
+            });
+        }
+    }
+    updateStaedteOptions();
+</script>
+<script>
+    $(function() {
+    $("#obj_liste, #obj_arr").sortable({
+        connectWith: "ul",
+        placeholder: "placeholder",
+        delay: 150
+    })
+        .disableSelection()
+        .click(function(e) {
+            var item = e.target;
+            if ($(item).is('option')) {
+                var parentId = $(item).parent().attr('id');
+                if (parentId === 'obj_liste') {
+                    $(item).fadeOut('fast', function() {
+                        $(item).appendTo($('#obj_arr')).fadeIn('slow');
+                    });
+                } else {
+                    $(item).fadeOut('fast', function() {
+                        $(item).appendTo($('#obj_liste')).fadeIn('slow');
+                    });
+                }
+            }
+        });
+    });
+</script>
+<script>
+    function reset_form() {
+        // Reset Bundesland Dropdown
+        document.getElementById('bundesland').selectedIndex = 0;
+        
+        // Reset Stadt Dropdown
+        var stadtDropdown = document.getElementById('stadt');
+        stadtDropdown.innerHTML = '';
+
+        // Reset Objektart Texteingabe
+        document.getElementById('obj').value = '';
+
+        // Reset Objektart Auswahl
+        $('#obj_arr').empty();
+
+        // Repopulate obj_liste with items from object_data
+        var objListe = $('#obj_liste');
+        objListe.empty();  // Clear existing items
+
+        // Add the original items back to obj_liste
+        {% for option in object_data %}
+            objListe.append('<option class="facet" value="{{ option.value }}">{{ option.text }}</option>');
+        {% endfor %}
+
+        updateStaedteOptions();
+        console.log('Form reset successfully');
+    }
+</script>
+{% endblock %}

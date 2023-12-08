@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Objekt Daten{% endblock %}
+
+{% block content %}
+<a class="back_btn" href="{% url 'test' %}">    
+     <strong>
+        <span class="material-symbols-outlined">arrow_left_alt</span>
+    </strong>
+</a>
+
+<section id="objectDetailsContent" class="section_obj_details">
+    <table class="display_table">
+        <thead>
+            <tr>
+                <th class="object">Objekt</th>
+                <th>Termin</th>
+                <th>Objektlink</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for entry in extracted_data %}
+            <tr>
+                <td>
+                    <div class="txt">
+                        <strong>
+                            <a class="header-link" title="Objektdetails" href="#">{{ entry.Objekttyp }}<br></a>
+                        </strong>
+                        {{ entry.Adresse.0 }}<br>
+                        Amtsgericht {{ entry.Amtsgericht }}
+                    </div>
+                </td>
+                <td class="date">{{ entry.Termin }}</td>
+                <td class="link">
+                    <a href="{{ entry.Link }}" title="Objektlink" target="_blank">
+                        <span class="material-symbols-outlined">Link</span>
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+{% endblock %}

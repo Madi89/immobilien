@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}Test Objektdetails{% endblock %}
+
+{% block content %}
+    <a class="back_btn" href="{% url 'home' %}" title="Startseite">      
+        <strong>
+            <span class="material-symbols-outlined">arrow_left_alt</span>
+        </strong>
+    </a>
+    {% if obj_data %}
+        <section id="objectDetailsContent" class="section_obj_details">
+            {% for obj in object_data %}
+                <br>
+                <h4>{{ obj.Objekttyp }}</h4>
+                <br><br>
+                <div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="text-align: left;">
+                                    Aktenzeichen: {{ obj.Aktenzeichen }}
+                                </th>
+                                <th style="text-align: right;">
+                                   <span style="font-weight: lighter;"></span>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Art der Versteigerung: {{ obj.Art_der_Versteigerung }}</strong></td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Grundbuch: {{ obj.Grundbuch }} </strong></td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Objekttyp: {{ obj.Objekttyp }}</strong></td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Adresse: {{ obj.Adresse }}</strong></td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Beschreibung: {{ obj.Beschreibung }}</strong></td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Verkehrswert: {{ obj.Verkehrswert }}</strong></td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Ort der Versteigerung: {{ obj.Ort_der_Versteigerung }}</strong></td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Termin: {{ obj.Termin }} </strong></td>
+                                <td></td>
+                            </tr>    
+                        </tbody>
+                    </table>
+                </div>
+            {% endfor %}
+        </section>

@@ -1,0 +1,520 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@200&family=Poppins:wght@300;400;500;600;700;800&family=Roboto:ital,wght@0,300;1,300&display=swap');
+
+:root{
+	--color-primary: #8f8f8f;
+	--color-danger: #ff7782;
+	--color-success: #41f1b6;
+	--color-warning: #ffbb55;
+	--color-white: #fff;
+	--color-info-dark: #787878;
+	--color-info-light: #bdcadc;
+	--color-box-shadow: #323334;
+	--color-dark: #5c5c5c;
+	--color-light: rgba(180, 180, 180, 0.406);
+	--color-primary-variant: #303030;
+	--color-dark-variant: #4c4c4d;
+	--color-backgroung: #ffffff;
+	--color-bg: #bdbdbd96;
+	--color-font: #000000;
+
+	--card-border-radius: 2rem;
+	--border-radius: 0.2rem;
+	--border-radius-1: 0.4rem;
+	--border-radius-2: 0.8rem;
+	--border-radius-3: 1.2rem;
+
+	--card-padding: 1.8rem;
+	--padding-1: 1.2rem;
+	--padding-2: 1.0rem;
+	--padding-3: 0.8rem;
+	--padding-4: 0.4rem;
+
+	--box_shadow: 0 2rem 3rem var(--color-box-shadow);
+}
+
+* {
+	margin: 0;
+	padding: 0;
+	outline: 0;
+	appearance: none;
+	border: 0;
+	text-decoration: none;
+	list-style: none;
+	box-sizing: border-box;
+  }
+
+/*==============BODY MAIN==============*/
+body {
+    width: 100%; 
+	min-height: 100vh;
+	font-family: poppins, sans-serif;
+	font-size: 0.88rem;
+	user-select: none;
+	overflow-x: hidden;
+}
+
+/*==============DRAG DROP==============*/
+
+
+/*=====================================*/
+/*=============== FORM ================*/
+
+.container-side{
+	display: grid;
+	background: var(--color-info-dark);
+	width: 100%;
+	margin: 0 auto;
+	gap: 1.8rem;
+	grid-template-columns: 14rem auto;
+}
+
+main .section_bdl_select
+{
+	width: 90%;
+	margin: 0 auto;
+}
+
+main .section_city_select {
+	display: flex;
+	flex-direction: row;
+	width: 90%;
+	margin: 0 auto;
+	gap: 1.8rem;
+}
+
+main{
+	margin-top: 3.4rem;
+}
+
+a{
+	color: var(--color-primary-variant);
+}
+  
+img {
+	display: block;
+	width: 100%;
+}
+  
+h1{
+	font-weight: 800;
+	font-size: 1.8rem;
+}
+  
+h2{
+	font-size: 1.4rem;
+}
+  
+h3, h4{
+	font-size: 0.8rem;
+}
+  
+h5{
+	font-size: 0.77rem;
+}
+  
+small{
+	font-size: 0.75rem;
+}
+
+h1, h2, h3, h4, h5, h6{
+	color: var(--color-white);
+}
+
+.primary {
+	color: var(--color-primary-variant);
+}
+
+/*================== SIDEBAR ==================*/
+aside{
+	height: 100vh;
+}
+  
+aside .top{
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-top: 1.4rem;
+}
+  
+aside .logo {
+	display: flex;
+	gap: 0.8rem;
+	margin: 0 auto;
+}
+  
+aside .logo img {
+	width: 2.5rem;
+	height: 2.5rem;
+	border-radius: 50%;
+}
+  
+aside .close {
+	display: none;
+}
+  
+aside .sidebar {
+	display: flex;
+	flex-direction: column;
+	height: 86vh;
+	position: relative;
+	top: 3rem;
+}
+  
+aside h3{
+	font-weight: 500;
+}
+  
+aside .sidebar a {
+	display: flex;
+	margin-left: 2rem;
+	gap: 1rem;
+	align-items: center;
+	position: relative;
+	height: 3.7rem;
+	transition: all 300ms ease;
+}
+  
+aside .sidebar a span {
+	font-size: 1.6rem;
+	color: var(--color-white);
+	transition: all 300ms ease;
+}
+      
+aside .sidebar a:hover span {
+    margin-left: 1rem;
+    color: var(--color-primary-variant); 
+}
+
+aside .sidebar a:hover h3 {
+    color: var(--color-primary-variant);
+}
+  
+/*========SECTION OBJECTDETAILS========*/
+main .section_bdl,
+main .section_plz {
+	width: 60%;
+}
+main .section_detail_search {
+	width: 80%;
+}
+
+main .section_city {
+	width: 35%;
+}
+
+main .section_obj_details {
+	width: 90%;
+}
+
+main .section_detail_search,
+main .section_bdl,
+main .section_city,
+main .section_plz,
+main .section_obj_details {
+	margin: 3.125rem auto 0;
+	border-radius: var(--border-radius-2);
+	padding: var(--padding-1);
+	transition: all 300ms ease;
+	background: var(--color-white);
+	box-shadow: var(--box_shadow);
+  	border: 0,06rem solid rgba(53, 53, 53, 0.62);
+	color: var(--color-font);
+}
+
+main .section_obj_details h4 {
+	color: var(--color-font);
+}
+
+
+main .section_bdl,
+main .section_city,
+main .section_plz {
+	text-align: center;
+}
+
+
+main .section_bdl label,
+main .section_city label,  
+main .section_plz label {
+	display: block;
+	margin-bottom: 1rem;
+}
+
+main .section_detail_search .selectionfield,
+main .section_city .selectionfield,
+main .section_plz .selectionfield,
+main .section_bdl .selectionfield {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: center;
+}
+
+main .form-detail .inputfield3,
+main .section_detail_search .inputfield,  
+main .section_city .inputfield2,
+main .section_plz .inputfield,
+main .section_plz .inputfield2,
+main .section_city .btn_city,
+main .section_plz .btn_city_1,
+main .section_bdl .btn_amtg {
+	margin: 0.5rem
+}
+
+main .section_detail_search h5,
+main .section_bdl h5,
+main .section_city h5,
+main .section_plz h5,
+main .section_obj_details h5 {
+	text-align: center;
+	font-size: 1.8rem;
+}
+
+main .section_detail_search h3 {
+	color: var(--color-font);
+}
+
+main .form-last-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-top: 1.5625rem;
+}
+
+main .form-last-row .no-wrap {
+	white-space: nowrap;
+}
+
+main .form-last-row h3 {
+	margin-right: 0.625rem;
+	color: var(--color-font);
+}
+
+main .form-last-row button {
+	width: 8.25rem;
+	margin: 0 30px;
+	padding: 0.60rem 1.10rem;
+	background-color: var(--color-white); 
+	color: var(--color-font);
+	border: 1px solid var(--color-dark-variant);
+	border-radius: var(--border-radius);
+	cursor: pointer;
+}
+
+main .form-last-row button:hover{
+	background-color: var(--color-dark-variant); 
+	color: var(--color-white); 
+	border: none;
+}
+
+main h4 {
+	text-align: center;
+	font-size: 1.5rem;
+}
+
+main .section_btn {
+	display: flex;
+	flex-direction: row;
+	max-width: 35rem; 
+	margin: 2rem auto; 
+	align-items: center;
+}
+
+main .section_btn input {
+	padding: var(--padding-4);
+	width: 20rem;
+	height: 2rem;
+	border-radius: 0,3125rem;
+	box-sizing: border-box;
+	gap: 2rem;
+}
+
+main .section_btn button {
+	width: 10.25rem;
+	margin: 0 auto;
+	padding: 0.60rem 1.10rem;
+	background-color: var(--color-white); 
+	color: var(--color-font); 
+	border: none;
+	border-radius: var(--border-radius);
+	cursor: pointer;
+	transition: background-color 0.3s;
+}
+
+main .section_btn button:hover {
+	background-color: var(--color-dark-variant); 
+	color: var(--color-white);
+}
+
+main .display_table,
+main .section_obj_details_table {
+	text-align: start;
+	width: 95%;
+}
+
+main .table_objektsuche,
+main .display_table,
+main .section_obj_details_table {
+	margin: auto;
+	padding: var(--card-padding);
+}
+
+main .table_objektsuche tbody tr,
+main .table_objektsuche {
+	width: 90%;
+}
+
+main .table_objektsuche tbody tr td {
+	width: 50%;
+}
+
+main thead th{
+    background-image: linear-gradient(to bottom, var(--color-dark-variant) 3px, transparent 3px);
+    background-repeat: repeat-x;
+    background-position: left bottom;
+    background-size: 100% 3px;
+}
+
+main thead th {
+	padding: 0 0.5rem;
+	width: auto;
+	white-space: nowrap;
+}
+
+main tbody td {
+	height: 2.8rem;
+	border-bottom: 1px;
+	padding: 0.5rem 0.5rem;
+}
+
+main .display_table tbody tr:nth-child(odd){
+	background: var(--color-white);
+}
+
+main .display_table tbody tr:nth-child(even){
+  background: var(--color-bg);
+}
+
+a.header-link {
+    color: var(--color-box-shadow);
+}
+
+a.header-link:hover {
+	text-decoration: underline;
+	color: var(--color-primary);
+}
+
+a.normal-link {
+    color: rgb(60, 60, 60);
+}
+
+th.object {
+	text-align: start;
+}
+
+tr.row {
+	margin-bottom: 50px;
+}
+
+td.date {
+	width: 20%;
+	font-size: small;
+	text-align: center;
+}
+
+td.link {
+	font-size: small;
+	text-align: center;
+}
+
+td.link span:hover {
+	color: var(--color-primary);
+}
+
+h5, label {
+	color: var(--color-font);
+}
+
+.back_btn{
+    color: var(--color-white);
+    text-decoration: none;
+    transition: color 0.3s; 
+}
+
+.back_btn:hover {
+    color: var(--color-dark-variant); 
+}
+
+.selectionfield {
+    display: flex;
+    align-items: center;
+}
+
+.inputfield {
+    margin-right: 10px;
+}
+
+.section_bdl .btn_amtg,
+.section_city .btn_city,
+.section_plz .btn_city_1 {
+	display: flex;
+    align-items: center;
+	width: 3rem;
+	height: 1.25rem;
+	margin-left: 0.5rem; 
+	border-radius: 0.25rem;
+	cursor: pointer;
+	background-color: var(--color-dark-variant); 
+	color: var(--color-white);
+}
+
+.section_bdl .btn_amtg span,
+.section_city .btn_city span,
+.section_plz .btn_city_1 span {
+    margin: 0 auto; 
+}
+
+.section_bdl .btn_amtg:hover,
+.section_city .btn_city:hover,
+.section_plz .btn_city_1:hover {
+    background-color: var(--color-white);
+    color: var(--color-dark-variant);
+    border: 0.1rem solid; 
+	cursor: pointer;
+	transition: background-color 0.3s;
+}
+
+.btn_search strong {
+	color: var(--color-white);
+}
+
+.inputfield{
+	border: 1px solid #555555; 
+	border-radius: 0.25rem; 
+	font-size: 1em;
+}
+
+.inputfield2{
+	border: 1px solid #555555; 
+	width: 15em; 
+	border-radius: 0.25rem; 
+	font-size: 1.05em;
+}
+
+.input {
+	text-align: center;
+}
+
+.error-message {
+	height: 50px;
+	border-radius: 5px;
+	background-color: #6c757d;
+	color: white;
+	font-weight: bold;
+	box-shadow: 12px 12px 12px #e61c66;
+	text-align: center;
+  }
+
+.error-message ul {
+    list-style: none;
+}

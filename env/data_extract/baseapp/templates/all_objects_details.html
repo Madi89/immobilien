@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Objekt Details{% endblock %}
+{% block content %}
+<section id="objectDetailsContent" class="section_obj_details">
+<h5>Alle Objekte</h5>
+<div class="display_table">
+    <table class="table">
+        <tr>
+            <th>Objekt</th>
+            <th>Termin</th>
+        </tr>
+
+        {% for obj in all_objects %}
+        <tr>
+            <td>
+                <div class="txt">
+                    <strong><a>{{ obj.info_header }}<br></a></strong>
+                    {{ obj.obj_text }}<br>
+                </div>
+            </td>
+            <td>{{ obj.date }}</td>
+        </tr>
+        {% endfor %}
+    </table>      
+</div>
+
+<div class="pagination">
+    <span class="step-links">
+        {% if all_objects.has_previous %}
+            <a href="?page=1">&laquo; first</a>
+            <a href="?page={{ all_objects.previous_page_number }}">previous</a>
+        {% endif %}
+
+        <span class="current">
+            Page {{ all_objects.number }} of {{ all_objects.paginator.num_pages }}.
+        </span>
+
+        {% if all_objects.has_next %}
+            <a href="?page={{ all_objects.next_page_number }}">next</a>
+            <a href="?page={{ all_objects.paginator.num_pages }}">last &raquo;</a>
+        {% endif %}
+    </span>
+</div>
+</section>
+{% endblock %}

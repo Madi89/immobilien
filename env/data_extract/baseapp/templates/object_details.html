@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}Objekt Details{% endblock %}
+
+{% block content %}
+    <a class="back_btn" href="{% url 'home' %}" title="Startseite">      
+        <strong>
+            <span class="material-symbols-outlined">arrow_left_alt</span>
+        </strong>
+    </a>
+    {% if obj_data %}
+        <section id="objectDetailsContent" class="section_obj_details">
+            {% for obj in obj_data %}
+                <br>
+                <h4>{{ obj.Objekttyp }}</h4>
+                <br><br>
+                <div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="text-align: left;">
+                                    Aktenzeichen: {{ obj.Aktenzeichen }}
+                                </th>
+                                <th style="text-align: right;">
+                                   <span style="font-weight: lighter;">{{ obj.Aktualisierung }}</span>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Art der Versteigerung: </strong></td>
+                                <td>{{ obj.Art_der_Versteigerung }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Grundbuch: </strong></td>
+                                <td>{{ obj.Grundbuch }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Objekttyp: </strong></td>
+                                <td>{{ obj.Objekttyp }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Adresse: </strong></td>
+                                <td>{{ obj.Adresse }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Beschreibung: </strong></td>
+                                <td>{{ obj.Beschreibung }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Verkehrswert: </strong></td>
+                                <td>{{ obj.Verkehrswert }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Ort der Versteigerung: </strong></td>
+                                <td>{{ obj.Ort_der_Versteigerung }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Termin: </strong></td>
+                                <td>{{ obj.Termin }}</td>
+                            </tr>    
+                        </tbody>
+                    </table>
+                </div>
+            {% endfor %}
+        </section>
+        <section class="download-forms">
+        <form class="section_btn" action="{% url 'object_details' url_index=0 %}" method="get">
+            <input type="hidden" name="download_pdf" value="1">
+            <input type="text" name="file_name" placeholder="Dateiname">
+            <button type="submit">PDF herunterladen</button>
+        </form>
+        </section>
+    {% else %}
+        <p>Objektdetails nicht verfügbar</p>
+    {% endif %}
+{% endblock %}

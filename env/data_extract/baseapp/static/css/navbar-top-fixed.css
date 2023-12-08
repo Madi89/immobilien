@@ -1,0 +1,18 @@
+/* fixed to the top */
+body {
+  min-height: 75rem;
+  padding-top: 4.5rem;
+}
+
+nav {
+  background: rgba(0, 9, 57, 0.55);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(12.1px);
+  -webkit-backdrop-filter: blur(12.1px);
+  border: 1px solid rgba(0, 9, 57, 0.62);
+}
+
+.navbar-brand {
+  color: white !important;
+  font-weight: 900;
+}
