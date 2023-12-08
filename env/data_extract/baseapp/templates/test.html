@@ -6,7 +6,7 @@
 <section class="section_bdl_select">
     <div class="section_detail_search">
     <h5>Objektsuche</h5>
-        <form class="form-detail" name="search" method="post" onsubmit="submitForm();" action="{% url 'test_liste' %}">
+        <form class="form-detail" name="search" method="post" onsubmit="submitForm();" action="{% url 'objekt_liste' %}">
             {% csrf_token %}
             <table class="table_objektsuche">
                 <tbody>

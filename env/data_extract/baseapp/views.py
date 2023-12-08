@@ -813,8 +813,20 @@ class DetailSearch(View):
         for key, value in bundesland_data.items():
             stadt_list = stadt_data.get(key, {}).get('text', [])
             bdl_data.append({'value': key, 'text': value['bundesland_txt'], 'staedte': stadt_list})
-        return render(request, self.template_name, {'bdl_data': bdl_data, 'object_data': object_data})
-    
+        return render(request, self.template_name, {'bdl_data': bdl_data, 'object_data': object_data })
+
+    def post(self, request):
+        object_data = self.fetch_datas(request)
+        bundesland_data = self.fetch_data(request)
+        stadt_data = fetch_staedte()
+
+        bdl_data = []
+        for key, value in bundesland_data.items():
+            stadt_list = stadt_data.get(key, {}).get('text', [])
+            bdl_data.append({'value': key, 'text': value['bundesland_txt'], 'staedte': stadt_list})
+
+        return render(request, self.template_name, {'bdl_data': bdl_data, 'object_data': object_data })
+
     def fetch_data(self, request):
             URL = 'https://www.zvg-portal.de/index.php?button=Termine%20suchen'
             response = requests.get(URL)
@@ -848,47 +860,6 @@ class DetailSearch(View):
             obj_art = [{'text': option.text.strip(), 'value': option.get('value', None)} for option in obj_arts]
         return obj_art
     
-    def post(self, request):
-        ger_name = request.POST.get('ger_name')
-        land_abk = request.POST.get('land_abk')
-        ger_id = request.POST.get('ger_id')
-        obj = request.POST.get('obj')
-        obj_arr = request.POST.getlist('obj_arr[]')   
-
-        last_added_element_obj_liste = obj_arr[-1] if obj_arr else None
-
-        form_data = {
-            'ger_name': ger_name,
-            'order_by': '2',
-            'land_abk': land_abk,
-            'ger_id': ger_id,
-            'az1': '',
-            'az2': '',
-            'az3': '',
-            'az4': '',
-            'art': '',
-            'obj': obj,
-            'obj_arr[]': obj_arr,
-            'obj_liste': last_added_element_obj_liste,
-            'str': '',
-            'hnr': '',
-            'plz': '',
-            'ort': '',
-            'ortsteil': '',
-            'vtermin': '',
-            'btermin': ''
-        }
-        print(form_data)
-    
-        external_url = 'https://www.zvg-portal.de/index.php?button=Suchen&all=1'
-        try:
-            response = requests.post(external_url, data=request.POST)
-            response.raise_for_status()
-            return HttpResponse(response.text)
-        except requests.RequestException as e:
-            print(f"Error making external request: {e}")
-            return HttpResponse("Error making external request.", status=500)
-        
 #extrahieren des Arrays BundeslandArrayId vom script
 def fetch_staedte_ID():
     URL = 'https://www.zvg-portal.de/index.php?button=Termine%20suchen'
@@ -998,7 +969,7 @@ class TestView(View):
     
 #Liste der Termine Objektsuche
 class TerminObjektlisteView(View):
-    template_name = 'test_liste.html'
+    template_name = 'objekt_liste.html'
     external_url = 'https://www.zvg-portal.de/index.php?button=Suchen&all=1'
 
     def post(self, request):
