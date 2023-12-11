@@ -8,7 +8,7 @@ from reportlab.lib import colors
 import requests
 from pipes import quote
 from django.shortcuts import render
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.views import View
 from django.core.cache import cache
 from bs4 import BeautifulSoup
@@ -1070,94 +1070,81 @@ class TerminObjektlisteView(View):
                         
 
 #Objektdetails der Deteilsuche/Terminliste
-class TestObjektdetails(View):
-    template_name='test_objektdetails.html'
-    external_url = 'https://www.zvg-portal.de/index.php?button=Suchen&all=1'
-    
-    def get(self, request, url_zvg_index):
-        url_data = self.extract_url(request)
+class ObjektdetailsSucheView(View):
+    temaplate_name = 'test_objektdetails.html'
 
-        print(f"url_zvg_index: {url_zvg_index}")
-        print(f"url_data: {url_data}")
+    def get(self, request):
+        selected_link = request.get_full_path().split('selected_link=')[1]
+        object_details = self.fetch_data(selected_link)
 
-        if url_zvg_index < len(url_data):
-            url_dict = url_data[url_zvg_index]
-            url = url_dict.get('Link')
-            if url:
-                object_data = self.fetch_data(url)
-                return render(request, self.template_name, {'object_data': object_data})
-            else:
-                return HttpResponse("Invalid URL format in extracted data.", status=400)
-        else:
-            return HttpResponse("Invalid URL index or no data found.", status=400)
+        return render(request, self.temaplate_name, {'object_details': object_details})
 
-
-    def fetch_data(self, url):
-        response = requests.get(url)
+    def fetch_data(self, selected_link):
+        response = requests.get(selected_link)
+        response.raise_for_status()  # Raise an HTTPError for bad responses (4xx or 5xx)
+        
         soup = BeautifulSoup(response.text, 'html.parser')
-
         table = soup.find('table', {'id': 'anzeige'})
 
-        first_row = table.find('tr')
-        if first_row:
-            aktenzeichen_tag = first_row.find('td')
-            if aktenzeichen_tag:
-                aktenzeichen = aktenzeichen_tag.get_text(strip=True)
+        if table:
+            first_row = table.find('tr')
+            if first_row:
+                aktenzeichen_tag = first_row.find('td')
+                if aktenzeichen_tag:
+                    aktenzeichen = aktenzeichen_tag.get_text(strip=True)
 
-            aktualisierung_tag = first_row.find('td', {'align': 'right'})
-            if aktualisierung_tag:
-                aktualisierung = aktualisierung_tag.get_text(strip=True)
+                aktualisierung_tag = first_row.find('td', {'align': 'right'})
+                if aktualisierung_tag:
+                    aktualisierung = aktualisierung_tag.get_text(strip=True)
 
-        art_der_versteigerung = None
-        grundbuch = None
-        adresse = None
-        objekttyp = None
-        beschreibung = None
-        verkehrswert = None
-        termin = None
-        ort_der_versteigerung = None
+            art_der_versteigerung = None
+            grundbuch = None
+            adresse = None
+            objekttyp = None
+            beschreibung = None
+            verkehrswert = None
+            termin = None
+            ort_der_versteigerung = None
 
-        for row in table.find_all('tr')[1:]:
-            columns = row.find_all('td')
-            if len(columns) == 2:
-                key = columns[0].get_text(strip=True)
-                value = columns[1].get_text(strip=True)
+            for row in table.find_all('tr')[1:]:
+                columns = row.find_all('td')
+                if len(columns) == 2:
+                    key = columns[0].get_text(strip=True)
+                    value = columns[1].get_text(strip=True)
 
-                if 'Art der Versteigerung' in key:
-                    art_der_versteigerung = value
-                elif 'Grundbuch' in key:
-                    grundbuch = value
-                elif 'Objekt/Lage' in key:
-                    objekt_lage_tag = row.find('b')
-                    if objekt_lage_tag:
-                        objekttyp = objekt_lage_tag.get_text(strip=True).rstrip(':')  
-                        if objekt_lage_tag.next_sibling:
-                            adresse = objekt_lage_tag.next_sibling.strip()
-                elif 'Beschreibung' in key:
-                    beschreibung = value
-                elif 'Verkehrswert' in key:
-                    verkehrswert = value
-                elif 'Termin' in key:
-                    termin = value
-                elif 'Ort der Versteigerung' in key:
-                    ort_der_versteigerung = value
+                    if 'Art der Versteigerung' in key:
+                        art_der_versteigerung = value
+                    elif 'Grundbuch' in key:
+                        grundbuch = value
+                    elif 'Objekt/Lage' in key:
+                        objekt_lage_tag = row.find('b')
+                        if objekt_lage_tag:
+                            objekttyp = objekt_lage_tag.get_text(strip=True).rstrip(':')  # Nachfolgenden Doppelpunkt entfernen
+                            if objekt_lage_tag.next_sibling:
+                                adresse = objekt_lage_tag.next_sibling.strip()
+                    elif 'Beschreibung' in key:
+                        beschreibung = value
+                    elif 'Verkehrswert' in key:
+                        verkehrswert = value
+                    elif 'Termin' in key:
+                        termin = value
+                    elif 'Ort der Versteigerung' in key:
+                        ort_der_versteigerung = value
 
-        test_objects_details = {
-            'Aktenzeichen' : aktenzeichen ,
-            'Aktualisierung' : aktualisierung,
-            'Art_der_Versteigerung' : art_der_versteigerung,
-            'Grundbuch' : grundbuch,
-            'Adresse' : adresse,
-            'Objekttyp': objekttyp,
-            'Beschreibung': beschreibung,
-            'Verkehrswert' : verkehrswert,
-            'Termin' : termin,
-            'Ort_der_Versteigerung' : ort_der_versteigerung,
-        }
-        return [test_objects_details]
+            details_dict = {
+                'Aktenzeichen' : aktenzeichen ,
+                'Aktualisierung' : aktualisierung,
+                'Art_der_Versteigerung' : art_der_versteigerung,
+                'Grundbuch' : grundbuch,
+                'Adresse' : adresse,
+                'Objekttyp': objekttyp,
+                'Beschreibung': beschreibung,
+                'Verkehrswert' : verkehrswert,
+                'Termin' : termin,
+                'Ort_der_Versteigerung' : ort_der_versteigerung,
+            }
 
-    
-
+            return [details_dict]
 #endregion
 
 #region alle Objekte
