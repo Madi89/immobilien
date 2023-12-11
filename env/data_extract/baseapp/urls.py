@@ -22,5 +22,5 @@ urlpatterns = [
 
     path('test/', TestView.as_view(), name='test'),
     path('objekt_liste/', TerminObjektlisteView.as_view(), name='objekt_liste'),
-    path('test_objektdetails/<int:url_zvg_index>/', TestObjektdetails.as_view() , name='test_objektdetails')
+    path('test_objektdetails/', ObjektdetailsSucheView.as_view() , name='test_objektdetails')
 ]
