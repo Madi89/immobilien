@@ -903,69 +903,6 @@ def fetch_staedte():
         }
 
     return bundesland_staedte_data
-#endregion
-
-#region Objektsuche Terminliste
-#Objektsuche
-class TestView(View):
-    template_name = 'test.html'
-
-    def get(self, request):
-        object_data = self.fetch_datas(request)
-        bundesland_data = self.fetch_data(request)
-        stadt_data = fetch_staedte()
-
-        bdl_data = []
-        for key, value in bundesland_data.items():
-            stadt_list = stadt_data.get(key, {}).get('text', [])
-            bdl_data.append({'value': key, 'text': value['bundesland_txt'], 'staedte': stadt_list})
-        return render(request, self.template_name, {'bdl_data': bdl_data, 'object_data': object_data })
-
-    def post(self, request):
-        object_data = self.fetch_datas(request)
-        bundesland_data = self.fetch_data(request)
-        stadt_data = fetch_staedte()
-
-        bdl_data = []
-        for key, value in bundesland_data.items():
-            stadt_list = stadt_data.get(key, {}).get('text', [])
-            bdl_data.append({'value': key, 'text': value['bundesland_txt'], 'staedte': stadt_list})
-
-        return render(request, self.template_name, {'bdl_data': bdl_data, 'object_data': object_data })
-
-    def fetch_data(self, request):
-            URL = 'https://www.zvg-portal.de/index.php?button=Termine%20suchen'
-            response = requests.get(URL)
-            soup = BeautifulSoup(response.text, 'html.parser')
-
-            bundesland_data = {}   
-            s_bundesland = soup.find('select', {'name': 'land_abk'})
-            if s_bundesland:
-                bundeslaender = s_bundesland.find_all('option')
-                
-                for option in bundeslaender:
-                    bundesland_value = option['value']
-                    bundesland_txt = option.get_text().strip()
-                    bundesland_data[bundesland_value] = {
-                        'bundesland_txt': bundesland_txt,
-                        'bundesland_value': bundesland_value
-                    }
-
-            return bundesland_data
-    
-    def fetch_datas(self, request):
-        URL = 'https://www.zvg-portal.de/index.php?button=Termine%20suchen'
-        response = requests.get(URL)
-        soup = BeautifulSoup(response.text, 'html.parser')
-
-
-        obj_art = []   
-        s_obj_art = soup.find('select', {'name': 'obj_liste'})
-        if s_obj_art:
-            obj_arts = s_obj_art.find_all('option')
-            obj_art = [{'text': option.text.strip(), 'value': option.get('value', None)} for option in obj_arts]
-        return obj_art
-    
     
 #Liste der Termine Objektsuche
 class TerminObjektlisteView(View):
@@ -1147,9 +1084,10 @@ class ObjektdetailsSucheView(View):
             return [details_dict]
 #endregion
 
+
 #region alle Objekte
 class ObjectItem:
-
+    
     def __init__(self, info_header, obj_text, date, url):
         self.info_header = info_header
         self.obj_text = obj_text
@@ -1233,138 +1171,33 @@ class AllObjectsView(View):
         return all_objects
 #endregion
 
-#Bundesländer
+
+#region Amtsgerichte
+#Auswahl Bundesland für Liste Amtsgerichte
 class AmtsgerichteView(View):
     template_name = 'amtsgerichte.html'
 
     def get(self, request):
-        amtg = fetch_and_process_bdl_data()
+        amtg = self.fetch_and_process_bdl_data()
         return render(request, self.template_name, {'amtg': amtg})
 
-def fetch_and_process_bdl_data():
-    session = requests.Session()
-    retries = Retry(total=5, backoff_factor=0.1, status_forcelist=[500, 502, 503, 504])
-    session.mount('http://', HTTPAdapter(max_retries=retries))
-    session.mount('https://', HTTPAdapter(max_retries=retries))
-
-    URL = 'https://www.zwangsversteigerung.de/amtsgericht/bundesland'
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:66.0) Gecko/20100101 Firefox/66.0",
-        "Accept-Encoding": "*",
-        "Connection": "keep-alive"
-    }
-    r = session.get(URL, headers=headers)
-
-    soup = BeautifulSoup(r.text, 'html.parser')
-    div_with_list = soup.find('div', class_='ag-buland-auswahl')
-
-    if div_with_list:
-        a_tags = div_with_list.find_all('a')
-        text_list = [a.get_text(strip=True) for a in a_tags]
-
-        bdl_data = {}
-        for text in text_list:
-            bdl_data[text] = {'bdl': text}
-
-        return bdl_data
-
-
-#Staedte
-class StaedteView(View):
-    template_name = 'bdl_city.html'
-
-    def get(self, request):
-        selected_amtsgericht = request.GET.get('amtsgericht')
-        cities_data = fetch_and_process_bdl_city_data(selected_amtsgericht)
-        return render(request, self.template_name, {'selected_amtsgericht': selected_amtsgericht, 'cities_data': cities_data})
-    
-def fetch_and_process_bdl_city_data(selected_amtsgericht):
-    dict_amtg = fetch_and_process_bdl_data()
-    cities = []  
-    if selected_amtsgericht in dict_amtg:
-        amgt_data = dict_amtg[selected_amtsgericht]
-        amtg = amgt_data['bdl'].lower()  
-
-        amtg = amtg.replace('ä', 'ae').replace('ü', 'ue').replace('ö', 'oe')
-
-        url = f'https://www.zwangsversteigerung.de/amtsgericht/{amtg}' 
-
-        r = requests.get(url)
-
-        if r.status_code == 200:
-            soup = BeautifulSoup(r.text, 'html.parser')
-            left_divs = soup.select('div.ag-gericht-auswahl div.left')
-
-            texts = [div.get_text(strip=True) for div in left_divs]
-
-            texts = texts[1:]
-
-            cities.extend(texts)
-
-    cities_data = {}  
-    for text in cities:
-        cities_data[text] = {'cities': text}
-
-    return cities_data
-
-
-# Objektliste für die jeweiligen Städte
-class StaedteObjektlisteView(View):
-    template_name = 'objekt_daten_nach_stadt.html'
-
-    def get(self, request):
-        selected_amtsgericht = request.GET.get('amtsgericht').lower()
-        selected_amtsgericht = selected_amtsgericht.replace('ä', 'ae').replace('ü', 'ue').replace('ö', 'oe')
-        selected_stadt = request.GET.get('cities').lower()
-        termine_data = fetch_city_data_list(selected_amtsgericht, selected_stadt)
-        context = {
-            'termine_data': termine_data,
-        }
-        return render(request, self.template_name, context)
-
-def fetch_city_data_list(selected_amtsgericht, selected_stadt):
-
-    base_url = 'https://www.zwangsversteigerung.de/amtsgericht/'
-    
-    if selected_amtsgericht and selected_stadt:
-        url = f'{base_url}{selected_amtsgericht}/{selected_stadt}'
-    
-        r = requests.get(url)
-        if r.status_code == 200:
-            soup = BeautifulSoup(r.text, 'html.parser')
-            
-            div = soup.find('div', class_ = 'd_tab_objekte')
-            a_tags = div.find_all('a')[2:]
-
-            results = []
-
-            for a_tag in a_tags:
-                address_element = a_tag.select_one('.d_tab_objekte div.left')
-                object_type_element = a_tag.select_one('.d_tab_objekte div.middle b')
-                detail_element = a_tag.select_one('.d_tab_objekte div.middle')
-                price_element = a_tag.select_one('.d_tab_objekte div.right b')
-                href_element = a_tag.get('href')
-
-                if address_element and object_type_element and price_element:
-                    address_parts = [part.strip() for part in address_element.stripped_strings]
-                    formatted_address = '\n'.join(address_parts)
-                    details = [part.strip() for part in detail_element.stripped_strings][1:]
-                    formatted_details = ''.join(details)
-                    object_type = object_type_element.text.strip()
-                    price = price_element.text.strip()
-                    href = href_element.strip() if href_element else None 
-                    url1 = f'https://www.zwangsversteigerung.de/'
-                    link_zum_objekt = url1 + href
+    def fetch_and_process_bdl_data(self):  
+        URL = 'https://gerichte-und-staatsanwaltschaften.de/amtsgerichte/'
+        response = requests.get(URL)
         
-                    obj_dict = {
-                        "Adresse": formatted_address,
-                        "Wohnungstyp": object_type,
-                        "Details": formatted_details,
-                        "Verkehrswert": price,
-                        "Link": link_zum_objekt
-                    }
+        soup = BeautifulSoup(response.text, 'html.parser')
+        amtgerichte_ul_list = soup.select('div.nv-content-wrap.entry-content ul')
 
-                    results.append(obj_dict)
+        text_list = []
 
-            return results
-        
+        if len(amtgerichte_ul_list) >= 4:
+            drittes_ul = amtgerichte_ul_list[4]
+            bdl_txt = drittes_ul.find_all('a')
+            if bdl_txt:
+                for a_element in bdl_txt:
+                    text = a_element.get_text()
+                    text_list.append(text)
+        return text_list
+
+
+#endregion        
