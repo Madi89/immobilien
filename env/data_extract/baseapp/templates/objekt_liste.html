@@ -25,7 +25,7 @@
                 <td>
                     <div class="txt">
                         <strong>
-                            <a class="header-link" title="Objektdetails" href="{% url 'test_objektdetails' %}?selected_link={{ entry.Link }}">{{ entry.Objekttyp }}<br></a>
+                            <a class="header-link" title="Objektdetails" href="{% url 'objektdetails' %}?selected_link={{ entry.Link }}">{{ entry.Objekttyp }}<br></a>
                         </strong>
                         {{ entry.Adresse.0 }}<br>
                         Amtsgericht {{ entry.Amtsgericht }}

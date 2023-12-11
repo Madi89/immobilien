@@ -1071,7 +1071,7 @@ class TerminObjektlisteView(View):
 
 #Objektdetails der Deteilsuche/Terminliste
 class ObjektdetailsSucheView(View):
-    temaplate_name = 'test_objektdetails.html'
+    temaplate_name = 'objektdetails.html'
 
     def get(self, request):
         selected_link = request.get_full_path().split('selected_link=')[1]
