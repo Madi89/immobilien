@@ -461,7 +461,7 @@ class ObjectCityDetailView(View):
                 index_art = all_txt.index('Art der Versteigerung:') + 1 if 'Art der Versteigerung:' in all_txt else None
                 art_der_versteigerung = all_txt[index_art] if index_art is not None else None
 
-                index_gb = all_txt.index('Grundbuch:') + 1 if 'Grunbuch:' in all_txt else None
+                index_gb = all_txt.index('Grundbuch:') + 1 if 'Grundbuch:' in all_txt else None
                 grundbuch = all_txt[index_gb] if index_gb is not None else None
 
                 index_b = all_txt.index('Beschreibung:') + 1 if 'Beschreibung:' in all_txt else None
