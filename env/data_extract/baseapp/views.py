@@ -425,64 +425,71 @@ class ObjectCityDetailView(View):
         soup = BeautifulSoup(response.text, 'html.parser')
         table = soup.find('table', {'id': 'anzeige'})
 
-        first_row = table.find('tr')
-        if first_row:
-            aktenzeichen_tag = first_row.find('td')
-            if aktenzeichen_tag:
-                aktenzeichen = aktenzeichen_tag.get_text(strip=True)
+        if table:
+            all_txt = [td.get_text(strip=True) for td in table.find_all('td')]
+            first_row = table.find('tr')
+            if first_row:
+                aktenzeichen_tag = first_row.find('td')
+                if aktenzeichen_tag:
+                    aktenzeichen = aktenzeichen_tag.get_text(strip=True)
 
-            aktualisierung_tag = first_row.find('td', {'align': 'right'})
-            if aktualisierung_tag:
-                aktualisierung = aktualisierung_tag.get_text(strip=True)
+                aktualisierung_tag = first_row.find('td', {'align': 'right'})
+                if aktualisierung_tag:
+                    aktualisierung = aktualisierung_tag.get_text(strip=True)
 
-        art_der_versteigerung = None
-        grundbuch = None
-        adresse = None
-        objekttyp = None
-        beschreibung = None
-        verkehrswert = None
-        termin = None
-        ort_der_versteigerung = None
+                art_der_versteigerung = None
+                grundbuch = None
+                adresse = None
+                objekttyp = None
+                beschreibung = None
+                verkehrswert = None
+                termin = None
+                ort_der_versteigerung = None
 
-        for row in table.find_all('tr')[1:]:
-            columns = row.find_all('td')
-            if len(columns) == 2:
-                key = columns[0].get_text(strip=True)
-                value = columns[1].get_text(strip=True)
+                for row in table.find_all('tr')[1:]:
+                    columns = row.find_all('td')
+                    if len(columns) == 2:
+                        key = columns[0].get_text(strip=True)
 
-                if 'Art der Versteigerung' in key:
-                    art_der_versteigerung = value
-                elif 'Grundbuch' in key:
-                    grundbuch = value
-                elif 'Objekt/Lage' in key:
-                    objekt_lage_tag = row.find('b')
-                    if objekt_lage_tag:
-                        objekttyp = objekt_lage_tag.get_text(strip=True).rstrip(':')  
-                        if objekt_lage_tag.next_sibling:
-                            adresse = objekt_lage_tag.next_sibling.strip()
-                elif 'Beschreibung' in key:
-                    beschreibung = value
-                elif 'Verkehrswert' in key:
-                    verkehrswert = value
-                elif 'Termin' in key:
-                    termin = value
-                elif 'Ort der Versteigerung' in key:
-                    ort_der_versteigerung = value
+                        if 'Objekt/Lage' in key:
+                            objekt_lage_tag = row.find('b')
+                            if objekt_lage_tag:
+                                objekttyp = objekt_lage_tag.get_text(strip=True).rstrip(':')  
+                                if objekt_lage_tag.next_sibling:
+                                    adresse = objekt_lage_tag.next_sibling.strip()
+                
+                index_art = all_txt.index('Art der Versteigerung:') + 1 if 'Art der Versteigerung:' in all_txt else None
+                art_der_versteigerung = all_txt[index_art] if index_art is not None else None
 
-        city_details_dict = {
-            'Aktenzeichen' : aktenzeichen ,
-            'Aktualisierung' : aktualisierung,
-            'Art_der_Versteigerung' : art_der_versteigerung,
-            'Grundbuch' : grundbuch,
-            'Adresse' : adresse,
-            'Objekttyp': objekttyp,
-            'Beschreibung': beschreibung,
-            'Verkehrswert' : verkehrswert,
-            'Termin' : termin,
-            'Ort_der_Versteigerung' : ort_der_versteigerung,
-        }
+                index_gb = all_txt.index('Grundbuch:') + 1 if 'Grunbuch:' in all_txt else None
+                grundbuch = all_txt[index_gb] if index_gb is not None else None
 
-        return [city_details_dict]
+                index_b = all_txt.index('Beschreibung:') + 1 if 'Beschreibung:' in all_txt else None
+                beschreibung = all_txt[index_b] if index_b is not None else None
+
+                index_v = all_txt.index('Verkehrswert in €:') + 1 if 'Verkehrswert in €:' in all_txt else None
+                verkehrswert = all_txt[index_v] if index_v is not None else None
+
+                index_t = all_txt.index('Termin:') + 1 if 'Termin:' in all_txt else None
+                termin = all_txt[index_t] if index_t is not None else None
+
+                index_o = all_txt.index('Ort der Versteigerung:') + 1 if 'Ort der Versteigerung:' in all_txt else None
+                ort_der_versteigerung = all_txt[index_o] if index_o is not None else None
+
+                city_details_dict = {
+                    'Aktenzeichen' : aktenzeichen ,
+                    'Aktualisierung' : aktualisierung,
+                    'Art_der_Versteigerung' : art_der_versteigerung,
+                    'Grundbuch' : grundbuch,
+                    'Adresse' : adresse,
+                    'Objekttyp': objekttyp,
+                    'Beschreibung': beschreibung,
+                    'Verkehrswert' : verkehrswert,
+                    'Termin' : termin,
+                    'Ort_der_Versteigerung' : ort_der_versteigerung,
+                }
+
+                return [city_details_dict]
 
     def generate_pdf(self, object_data, file_name='object_details.pdf'):
         buffer = BytesIO()
@@ -1219,3 +1226,9 @@ class AmtsgerichteStaedte(View):
 
 
 #endregion        
+
+"""TODO:
+Änderungen an den Objektdetails für Auswahl Stadt/Radius
+- Methoden zusammenfassen
+- Liste Amtsgerichte hinzufügen
+"""
