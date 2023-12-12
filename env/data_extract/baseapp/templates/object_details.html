@@ -18,47 +18,67 @@
                     <table>
                         <thead>
                             <tr>
+                            {% if obj.Aktenzeichen %}
                                 <th style="text-align: left;">
                                     Aktenzeichen: {{ obj.Aktenzeichen }}
                                 </th>
+                            {% endif %}
+                            {% if obj.Aktualisierung %}
                                 <th style="text-align: right;">
                                    <span style="font-weight: lighter;">{{ obj.Aktualisierung }}</span>
                                 </th>
+                            {% endif %}
                             </tr>
                         </thead>
                         <tbody>
+                            {% if obj.Art_der_Versteigerung %}
                             <tr>
                                 <td><strong>Art der Versteigerung: </strong></td>
                                 <td>{{ obj.Art_der_Versteigerung }}</td>
                             </tr>
+                            {% endif %}
+                            {% if obj.Grundbuch %}
                             <tr>
                                 <td><strong>Grundbuch: </strong></td>
                                 <td>{{ obj.Grundbuch }}</td>
                             </tr>
+                            {% endif %}
+                            {% if obj.Objekttyp %}
                             <tr>
                                 <td><strong>Objekttyp: </strong></td>
                                 <td>{{ obj.Objekttyp }}</td>
                             </tr>
+                            {% endif %}
+                            {% if obj.Adresse %}
                             <tr>
                                 <td><strong>Adresse: </strong></td>
                                 <td>{{ obj.Adresse }}</td>
                             </tr>
+                            {% endif %}
+                            {% if obj.Beschreibung %}
                             <tr>
                                 <td><strong>Beschreibung: </strong></td>
                                 <td>{{ obj.Beschreibung }}</td>
                             </tr>
+                            {% endif %}
+                            {% if obj.Verkehrswert %}
                             <tr>
                                 <td><strong>Verkehrswert: </strong></td>
                                 <td>{{ obj.Verkehrswert }}</td>
                             </tr>
+                            {% endif %}
+                            {% if obj.Ort_der_Versteigerung %}
                             <tr>
                                 <td><strong>Ort der Versteigerung: </strong></td>
                                 <td>{{ obj.Ort_der_Versteigerung }}</td>
                             </tr>
+                            {% endif %}
+                            {% if obj.Termin %}
                             <tr>
                                 <td><strong>Termin: </strong></td>
                                 <td>{{ obj.Termin }}</td>
-                            </tr>    
+                            </tr> 
+                            {% endif %}   
                         </tbody>
                     </table>
                 </div>
