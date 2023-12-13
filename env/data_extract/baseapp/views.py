@@ -8,6 +8,7 @@ from reportlab.lib import colors
 import requests
 from pipes import quote
 from django.shortcuts import render
+from django import forms
 from django.http import HttpResponse, JsonResponse
 from django.views import View
 from django.core.cache import cache
@@ -143,7 +144,7 @@ class ObjectDetailsView(View):
 
         return [details_dict]
 
-    def generate_pdf(self, obj_data, file_name="object_details.pdf"):
+    def generate_pdf(self, obj_data, file_name="objektdetails.pdf"):
         buffer = BytesIO()  # Puffer zum Speichern von PDF-Inhalten
         styles = getSampleStyleSheet()  # Stile für die PDF-Datei
 
@@ -175,7 +176,7 @@ class ObjectDetailsView(View):
         elements.append(Paragraph(header_text, styles['Normal']))
         elements.append(Spacer(1, 12))  
         line_row = Table([[Spacer(1, 1)]], colWidths=[doc.width], rowHeights=[doc.height * 0.001])
-        line_row.setStyle([('BACKGROUND', (0, 0), (-1, -1), colors.red)])
+        line_row.setStyle([('BACKGROUND', (0, 0), (-1, -1), colors.gray)])
         elements.append(line_row)
 
         elements.append(Spacer(1, 12)) 
@@ -185,7 +186,7 @@ class ObjectDetailsView(View):
         elements.append(Spacer(1, 12))  
 
         line_row = Table([[Spacer(1, 1)]], colWidths=[doc.width], rowHeights=[doc.height * 0.001])
-        line_row.setStyle([('BACKGROUND', (0, 0), (-1, -1), colors.red)])
+        line_row.setStyle([('BACKGROUND', (0, 0), (-1, -1), colors.gray)])
         elements.append(line_row) 
 
         elements.append(Spacer(1, 12))
@@ -201,7 +202,7 @@ class ObjectDetailsView(View):
         elements.append(Spacer(1, 12))
 
         line_row = Table([[Spacer(1, 1)]], colWidths=[doc.width], rowHeights=[doc.height * 0.001])
-        line_row.setStyle([('BACKGROUND', (0, 0), (-1, -1), colors.red)])
+        line_row.setStyle([('BACKGROUND', (0, 0), (-1, -1), colors.gray)])
         elements.append(line_row)  
 
         styles.add(ParagraphStyle(name='RightAligned', alignment=2))
@@ -226,19 +227,25 @@ class ObjectDetailsView(View):
 
             if obj_data:
                 if request.GET.get('download_pdf') == '1':
-                    file_name = request.GET.get('file_name', 'object_details')
+                    form = forms.Form(request.GET)
+                    form.fields['file_name'] = forms.CharField(max_length=255, required=True)
 
-                    if not file_name.endswith('.pdf'):
-                        file_name += '.pdf' 
-                    
-                    file_name_encoded = quote(file_name) 
-                    pdf_response = self.generate_pdf(obj_data, file_name)
-                    pdf_response['Content-Disposition'] = f'attachment; filename="{file_name_encoded}"'
-                    return pdf_response 
+                    if form.is_valid():
+                        file_name = form.cleaned_data['file_name']
+
+                        if not file_name.endswith('.pdf'):
+                            file_name += '.pdf'
+
+                        file_name_encoded = quote(file_name)
+                        pdf_response = self.generate_pdf(obj_data, file_name)
+                        pdf_response['Content-Disposition'] = f'attachment; filename="{file_name_encoded}"'
+                        return pdf_response
+                    else:
+                        return HttpResponse("Ungültige Eingabe im Formular")
                 else:
-                    return render(request, self.template_name, {'obj_data': obj_data}) 
+                    return render(request, self.template_name, {'obj_data': obj_data})
             else:
-                return HttpResponse("Objekt nicht gefunden") 
+                return HttpResponse("Objekt nicht gefunden")
         else:
             return HttpResponse("Ungültiger Index")
 
