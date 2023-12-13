@@ -85,7 +85,7 @@
             {% endfor %}
         </section>
         <section class="download-forms">
-        <form class="section_btn" action="{% url 'object_details' url_index=0 %}" method="get">
+        <form class="section_btn" action="{% url 'object_details' url_index=0 %}" method="get" onsubmit="return validateForm()">
             <input type="hidden" name="download_pdf" value="1">
             <input type="text" name="file_name" placeholder="Dateiname">
             <button type="submit">PDF herunterladen</button>
@@ -94,4 +94,17 @@
     {% else %}
         <p>Objektdetails nicht verfügbar</p>
     {% endif %}
+
+    <script>
+        function validateForm() {
+            var fileNameInput = document.getElementById('file_name');
+            var fileName = fileNameInput.value.trim();
+
+            if (fileName === '') {
+                alert('Bitte geben Sie einen Dateinamen ein.');
+                return false;
+            }
+            return true;
+        }
+    </script>
 {% endblock %}
