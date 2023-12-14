@@ -22,14 +22,15 @@
         </thead>
 
         <tbody>
-            {% for info_header, obj_text, date, city_url in data %}
+            {% for info_header, address, verkehrswert, date, city_url in data %}
             <tr>
                 <td>
                     <div class="txt">
                         <strong>
                             <a class="header-link" title="Objektdetails" href="{% url 'object_city_details' selected_city=request.GET.city city_url_index=forloop.counter0 %}">{{ info_header }}<br></a>
                         </strong>
-                        {{ obj_text }}
+                        {{ address }}<br>
+                        {{ verkehrswert }}
                     </div>
                 </td>
                 <td class="date">{{ date }}</td>

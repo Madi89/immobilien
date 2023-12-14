@@ -11,23 +11,23 @@
     {% if object_details %}
         <section id="objectDetailsContent" class="section_obj_details">
             {% for obj in object_details %}
-                 <br>
+                <br>
                 <h4>{{ obj.Objekttyp }}</h4>
                 <br><br>
                 <div>
-                    <table>
+                    <table style="width: 100%">
                         <thead>
                             <tr>
-                                {% if obj.Aktenzeichen %}
-                                <th style="text-align: left;">
+                            {% if obj.Aktenzeichen %}
+                                <th style="text-align: left; width: 20%;">
                                     Aktenzeichen: {{ obj.Aktenzeichen }}
                                 </th>
-                                {% endif %}
-                                {% if obj.Aktualisierung %}
+                            {% endif %}
+                            {% if obj.Aktualisierung %}
                                 <th style="text-align: right;">
                                    <span style="font-weight: lighter;">{{ obj.Aktualisierung }}</span>
                                 </th>
-                                {% endif %}
+                            {% endif %}
                             </tr>
                         </thead>
                         <tbody>
@@ -77,14 +77,14 @@
                             <tr>
                                 <td><strong>Termin: </strong></td>
                                 <td>{{ obj.Termin }}</td>
-                            </tr>
-                            {% endif %}    
+                            </tr> 
+                            {% endif %}   
                         </tbody>
                     </table>
                 </div>
             {% endfor %}
         </section>
-            {% else %}
+        {% else %}
         <p>Objektdetails nicht verfügbar</p>
     {% endif %}
 {% endblock %}

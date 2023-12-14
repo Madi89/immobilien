@@ -28,6 +28,9 @@
                             <a class="header-link" title="Objektdetails" href="{% url 'objektdetails' %}?selected_link={{ entry.Link }}">{{ entry.Objekttyp }}<br></a>
                         </strong>
                         {{ entry.Adresse.0 }}<br>
+                        {% if entry.Verkehrswert %}
+                            {{ entry.Verkehrswert}}<br>
+                        {% endif %}
                         Amtsgericht {{ entry.Amtsgericht }}
                     </div>
                 </td>

@@ -22,14 +22,16 @@
         </thead>
 
         <tbody>
-            {% for info_header, obj_txt, date, city_url in data_radius %}
+            {% for info_header, address, verkehrswert, amtsgericht, date, city_url in data_radius %}
             <tr>
                 <td>
                     <div class="txt">
                         <strong>
                             <a class="header-link" title="Objektdetails" href="{% url 'object_radius_details' selected_radius=request.GET.zvgR zip_or_city=request.GET.zvgZIPorCity city_url_index=forloop.counter0 %}">{{ info_header }}<br></a>
                         </strong>
-                        {{ obj_txt }}
+                        {{ address }}<br>
+                        {{ verkehrswert }}<br>
+                        Amtsgericht {{ amtsgericht }}
                     </div>
                 </td>
                 <td class="date">{{ date }}</td>

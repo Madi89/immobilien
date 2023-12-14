@@ -1,5 +1,5 @@
 from io import BytesIO
-from reportlab.lib.pagesizes import letter, A4
+from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, TableStyle, Spacer
 from reportlab.platypus import Paragraph
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -9,13 +9,12 @@ import requests
 from pipes import quote
 from django.shortcuts import render
 from django import forms
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse
 from django.views import View
 from django.core.cache import cache
 from bs4 import BeautifulSoup
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from .models import ObjectItem 
-from requests.adapters import Retry, HTTPAdapter
 import re
 
 #region Index
@@ -53,25 +52,26 @@ class IndexView(View):
                 else:
                     header = ''
 
-                obj_txt = ''
-                br_tags = columns[0].find_all('br')
+                link_tag = columns[0].find_all('a')[-1]  # Assuming you want the last <a> tag
+                if link_tag:
+                    obj_linktxt = link_tag.get_text(strip=True)
+                else:
+                    obj_linktxt = ''
 
-                if br_tags: 
-                    for br_tag in br_tags:
-                        obj_txt += br_tag.next_sibling.strip() + '\n'
-   
+                obj_text = columns[0].get_text().replace(header, '').strip()
+                address, verkehrswert_with_additional_text = obj_text.split('Verkehrswert:', 1)
+                verkehrswert, _ = verkehrswert_with_additional_text.split('Amtsgericht', 1)
+                address = address.strip()
+                verkehrswert = f"Verkehrswert: {verkehrswert.strip()}" if verkehrswert else ''
+                
                 obj_date = columns[1].find('time')
                 date = obj_date.get_text()
 
-                link_tag = columns[0].find_all('a')[-1]  
-                if link_tag:
-                    obj_linktxt = link_tag.get_text(strip=True)
-
                 if index <= len(zvg_urls):
                     url = zvg_urls[index - 1]
-                    data1.append((header, obj_txt, obj_linktxt, date, url))
+                    data1.append((header, address, verkehrswert, obj_linktxt, date, url))
                 else:
-                    data1.append((header, obj_txt, obj_linktxt, date, None))
+                    data1.append((header, address, verkehrswert, obj_linktxt, date, None))
         return data1
     
 
@@ -151,8 +151,7 @@ class ObjectDetailsView(View):
         response['Content-Disposition'] = f'attachment; filename="{file_name}"'  # Einstellen des Dateinamens für den Download
 
         return response
-
-    
+  
     def get(self, request, url_index):
         url_data = fetch_url()
 
@@ -253,13 +252,7 @@ class ObjectView(View):
 
         response = requests.get(URL)
 
-        if response.status_code != 200:
-            return []
-
-        return self.process_html(response.text, selected_city)
-
-    def process_html(self, html_text, selected_city):
-        soup = BeautifulSoup(html_text, 'html.parser')
+        soup = BeautifulSoup(response.text, 'html.parser')
         table = soup.find('table', id='termineOutput')
 
         data = []
@@ -272,20 +265,17 @@ class ObjectView(View):
                 strong_tag = columns[0].find('strong')
                 info_header = strong_tag.get_text() if strong_tag else ''
                 
-                obj_text = ""
-                br_tags = columns[0].find_all('br')
-
-                for br_tag in br_tags:
-                    next_sibling = br_tag.next_sibling
-                    if next_sibling and isinstance(next_sibling, str): 
-                        obj_text += next_sibling.strip() + '\n'
-
+                obj_text = columns[0].get_text().replace(info_header, '').strip()
+                address, verkehrswert = obj_text.split('Verkehrswert:', 1)
+                address = address.strip()
+                verkehrswert = f"Verkehrswert: {verkehrswert.strip()}" if verkehrswert else ''
+                            
                 date = columns[1].find('time').get_text() if columns[1].find('time') else ''
 
                 city_url_data = fetch_city_url(selected_city)
                 city_url = city_url_data[index - 1] if index <= len(city_url_data) else None
 
-                data.append((info_header, obj_text, date, city_url))
+                data.append((info_header, address, verkehrswert, date, city_url))
 
         return data
 
@@ -310,16 +300,9 @@ class ObjectDataRadiusView(View):
         radius_data = fetch_and_process_radius_data().get(selected_radius)
         zvgRadius = radius_data.get('zvgR')
         URL = f'https://www.justiz.nrw.de/JM/doorpage_online_verfahren_projekte/projekte_fuer_den_buerger/zvg_auskunft/index.php?zvgId=&zvgZIPorCity={zip_or_city}&zvgRadius={zvgRadius}&x=24&y=14&formIsSent=1#zvg_search'
-        print(URL)
         response = requests.get(URL)
         
-        if response.status_code != 200:
-            return []
-        
-        return self.process_html(response.text, selected_radius, zip_or_city)
-    
-    def process_html(self, html_content, selected_radius, zip_or_city):
-        soup = BeautifulSoup(html_content, 'html.parser')
+        soup = BeautifulSoup(response.text, 'html.parser')
         table = soup.find('table', id='termineOutput')
 
         data1 = []
@@ -332,20 +315,18 @@ class ObjectDataRadiusView(View):
                 strong_tag = columns[0].find('strong')
                 info_header = strong_tag.get_text() if strong_tag else ''
 
-                obj_txt = ""
-                br_tags = columns[0].find_all('br')
-
-                for br_tag in br_tags:
-                    next_sibling = br_tag.next_sibling
-                    if next_sibling and isinstance(next_sibling, str): 
-                        obj_txt += next_sibling.strip() + '\n'
+                obj_text = columns[0].get_text().replace(info_header, '').strip()
+                address, verkehrswert_with_additional_text = obj_text.split('Verkehrswert:', 1)
+                verkehrswert, amtsgericht = verkehrswert_with_additional_text.split('Amtsgericht', 1)
+                address = address.strip()
+                verkehrswert = f"Verkehrswert: {verkehrswert.strip()}" if verkehrswert else ''
 
                 date = columns[1].find('time').get_text() if columns[1].find('time') else ''
 
                 city_url_data = fetch_radius_url(selected_radius, zip_or_city)
                 city_url = city_url_data[index - 1] if index <= len(city_url_data) else None
 
-                data1.append((info_header, obj_txt, date, city_url))
+                data1.append((info_header, address, verkehrswert, amtsgericht, date, city_url))
                 
         return data1
 
@@ -772,6 +753,7 @@ class TerminObjektlisteView(View):
         objekttyp_value = None
         adresse = None
         amtsgericht_value = None
+        verkehrswert_value = None
         termin_value = None
         link_value = None
 
@@ -804,18 +786,25 @@ class TerminObjektlisteView(View):
             if td_tags and 'Termin' in td_tags[0].get_text():
                 termin_value = td_tags[1].get_text(strip=True)
 
+            if td_tags and 'Verkehrswert in €' in td_tags[0].get_text():
+                verkehrswert_tag = td_tags[1].find('p')
+                if verkehrswert_tag:
+                    verkehrswert_value = verkehrswert_tag.get_text(strip = True)
+
             if objekttyp_value is not None and amtsgericht_value is not None and adresse is not None and termin_value is not None and link_value is not None:
                 extracted_data.append({
                     'Link': link_value,
                     'Objekttyp': objekttyp_value,
                     'Adresse': adresse,
                     'Amtsgericht': amtsgericht_value,
+                    'Verkehrswert': verkehrswert_value,
                     'Termin': termin_value
                 })
                 link_value = None
                 objekttyp_value = None
                 adresse = None
                 amtsgericht_value = None
+                verkehrswert_value = None
                 termin_value = None
 
         return extracted_data

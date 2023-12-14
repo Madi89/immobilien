@@ -28,14 +28,15 @@
             </tr>
         </thead>
         <tbody>
-            {% for header, obj_txt, obj_linktxt, date, url in data1 %}
+            {% for header, address, verkehrswert, obj_linktxt, date, url in data1 %}
             <tr class="row">
                 <td>
                     <div class="txt">
                         <strong>
                             <a class="header-link" href="{% url 'object_details' forloop.counter0 %}" title="Objektdetails">{{ header }}<br></a>
                         </strong>
-                        {{ obj_txt }}<br>
+                        {{ address }}<br>
+                        {{ verkehrswert }}<br>
                         {{ obj_linktxt }}
                     </div>
                 </td>
