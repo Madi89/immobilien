@@ -1,0 +1,12 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+
+#: templates/index.html:3
+msgid "Startseite"
+msgstr "Homepage"
+
+#: templates/index.html:15
+msgid "Zuletzt veröffentlichte Termine"
+msgstr "Recently published dates"
+

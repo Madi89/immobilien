@@ -8,14 +8,18 @@ from reportlab.lib import colors
 import requests
 from pipes import quote
 from django.shortcuts import render
+from django.template.loader import render_to_string
 from django import forms
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.views import View
+from django.contrib import messages
 from django.core.cache import cache
 from bs4 import BeautifulSoup
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from .models import ObjectItem 
 import re
+from django.utils.translation import activate
+
 
 #region Index
 # Index
@@ -23,22 +27,23 @@ class IndexView(View):
     template_name = 'index.html'
 
     def get(self, request):
-        data1 = self.fetch_data(request)  # Abrufen der Daten
+        data1 = self.fetch_data(request)
         return render(request, self.template_name, {'data1': data1})
-    
+
     def post(self, request):
-        return self.fetch_data(request)
+        data1 = self.fetch_data(request)
+        return JsonResponse({'data1': data1})
     
     def fetch_data(self,request):
-        # URL, von der Daten abgerufen werden
+        # URL from which data is retrieved
         URL = 'https://www.justiz.nrw.de/JM/doorpage_online_verfahren_projekte/projekte_fuer_den_buerger/zvg_auskunft/index.php#zvg_search'
         r = requests.get(URL)
         
-        soup = BeautifulSoup(r.text, 'html.parser') # Parsen des HTML-Inhalts
+        soup = BeautifulSoup(r.text, 'html.parser') # Parsing the HTML content
         table = soup.find('table', {'id' : 'termineOutput'})
 
         data1 = []
-        zvg_urls= fetch_url() # Abrufen der Objekt-URLs
+        zvg_urls= fetch_url() # Retrieving the object URLs
 
         rows = table.find_all('tr')
         for index, row in enumerate(rows[1:], start=1):
@@ -52,7 +57,7 @@ class IndexView(View):
                 else:
                     header = ''
 
-                link_tag = columns[0].find_all('a')[-1]  # Assuming you want the last <a> tag
+                link_tag = columns[0].find_all('a')[-1]  # Obtain the last <a> tag
                 if link_tag:
                     obj_linktxt = link_tag.get_text(strip=True)
                 else:
@@ -75,10 +80,11 @@ class IndexView(View):
         return data1
     
 
-# Objektdetails der Objekte auf der Startseite
+# Object details of the objects on the start page
 class ObjectDetailsView(View):
     template_name = 'object_details.html'
 
+    # TODO: Must still be changed, as otherwise the 1 object on index 0 is always downloaded
     def generate_pdf(self, obj_data, file_name="objektdetails.pdf"):
         buffer = BytesIO()  # Puffer zum Speichern von PDF-Inhalten
         styles = getSampleStyleSheet()  # Stile für die PDF-Datei
@@ -89,14 +95,20 @@ class ObjectDetailsView(View):
             rightMargin=72,
             leftMargin=72,
             topMargin=72,
-            bottomMargin=72,
+            bottomMargin=0,
             pagesize=letter
         )
 
-        styles.add(ParagraphStyle(name='Blocksatz', parent=styles['Normal'], alignment=0))
-
+        styles_custom = {
+            'RightAligned': ParagraphStyle(name='RightAligned', alignment=2),
+            'Blocksatz': ParagraphStyle(name='Blocksatz', parent=styles['Normal'], alignment=0)
+        }
+            
         elements = []
-        objekttyp = obj_data[0].get('Objekttyp', '')
+
+        #for elements in obj_data['obj_data']:
+
+        objekttyp = obj_data[0].get('Objekttyp', '').replace(':', '')
         aktenzeichen = obj_data[0].get('Aktenzeichen', '')
         objektbeschreibung = obj_data[0].get('Beschreibung', '')
         art_der_versteigerung = obj_data[0].get('Art_der_Versteigerung')
@@ -108,7 +120,10 @@ class ObjectDetailsView(View):
         aktualisierung = obj_data[0].get('Aktualisierung', '')
 
         header_text = f"<strong>{objekttyp}&nbsp; - &nbsp;{aktenzeichen}</strong>"
-        elements.append(Paragraph(header_text, styles['Normal']))
+        header_style = styles['Normal'].clone('HeaderStyle')
+        header_style.fontSize = 14 
+        elements.append(Paragraph(header_text, header_style))
+
         elements.append(Spacer(1, 12))  
         line_row = Table([[Spacer(1, 1)]], colWidths=[doc.width], rowHeights=[doc.height * 0.001])
         line_row.setStyle([('BACKGROUND', (0, 0), (-1, -1), colors.gray)])
@@ -127,37 +142,57 @@ class ObjectDetailsView(View):
         elements.append(Spacer(1, 12))
         elements.append(Paragraph(f"<strong>Objektinfos</strong>", styles['Normal']))
         elements.append(Spacer(1, 6))
-        elements.append(Paragraph(f"Aktenzeichen: &nbsp;&nbsp; {aktenzeichen}", styles['Normal']))
-        elements.append(Paragraph(f"Art der Versteigerung: &nbsp&nbsp{art_der_versteigerung}", styles['Normal']))
-        elements.append(Paragraph(f"Objekttyp: &nbsp;&nbsp; {objekttyp}", styles['Normal']))  
-        elements.append(Paragraph(f"Adresse: &nbsp;&nbsp; {adresse_obj}", styles['Normal'])) 
-        elements.append(Paragraph(f"Grundbuch: &nbsp;&nbsp; {grundbuch}", styles['Normal'])) 
-        elements.append(Paragraph(f"Verkehrswert: &nbsp;&nbsp; {verkehrswert}", styles['Normal'])) 
-        elements.append(Paragraph(f"Termin der Versteigerung: &nbsp;&nbsp; {termin_versteigerung}", styles['Normal'])) 
-        elements.append(Spacer(1, 12))
 
+        data = [
+            ["Aktenzeichen", aktenzeichen] if aktenzeichen is not None else None,
+            ["Art der Versteigerung", art_der_versteigerung] if art_der_versteigerung is not None else None,
+            ["Objekttyp", objekttyp] if objekttyp is not None else None,
+            ["Adresse", adresse_obj] if adresse_obj is not None else None,
+            ["Grundbuch", grundbuch] if grundbuch is not None else None,
+            ["Verkehrswert", verkehrswert] if verkehrswert is not None else None,
+            ["Termin der Versteigerung", termin_versteigerung] if termin_versteigerung is not None else None
+        ]
+
+        col_widths = [doc.width / 4, 3 * doc.width / 4]
+        table_style = [
+            ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+            ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+            ('VALIGN', (0, 0), (-1, 0), 'MIDDLE'),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ]
+
+        table_data = [row for row in data if row is not None]
+        table = Table(table_data, colWidths=col_widths)
+        table.setStyle(table_style)
+
+        elements.append(table)
+
+        elements.append(Spacer(1, 380))
         line_row = Table([[Spacer(1, 1)]], colWidths=[doc.width], rowHeights=[doc.height * 0.001])
         line_row.setStyle([('BACKGROUND', (0, 0), (-1, -1), colors.gray)])
-        elements.append(line_row)  
-
-        styles.add(ParagraphStyle(name='RightAligned', alignment=2))
-        elements.append(Paragraph(f"<small>{aktualisierung}</small>", styles['RightAligned']))
-
-        # Erstellen des PDF-Dokuments
+        elements.append(line_row)
+        elements.append(Paragraph(f"<small>{aktualisierung}</small>", styles_custom['RightAligned']))
+        buffer.seek(0)
+        
         doc.build(elements)
 
-        buffer.seek(0) # Bewegen des Cursors an den Anfang des Puffers
-        response = HttpResponse(buffer, content_type='application/pdf') # Erstellung einer HTTP-Antwort mit PDF-Inhalt
-        response['Content-Disposition'] = f'attachment; filename="{file_name}"'  # Einstellen des Dateinamens für den Download
+        buffer.seek(0)
+        response = HttpResponse(buffer, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="{file_name}"'
 
         return response
   
     def get(self, request, url_index):
         url_data = fetch_url()
 
-        if url_index < len(url_data):
-            url = url_data[url_index] # Abrufen der URL auf der Grundlage des Index
-            obj_data = fetch_object_data(url) # Objektdetails von der URL abrufen
+        try:
+            index_as_int = int(url_index)
+        except ValueError:
+            return HttpResponse("Ungültiger Index")
+
+        if 0 <= index_as_int < len(url_data):
+            url = url_data[index_as_int]
+            obj_data = fetch_object_data(url)
 
             if obj_data:
                 if request.GET.get('download_pdf') == '1':
@@ -175,16 +210,16 @@ class ObjectDetailsView(View):
                         pdf_response['Content-Disposition'] = f'attachment; filename="{file_name_encoded}"'
                         return pdf_response
                     else:
-                        return HttpResponse("Ungültige Eingabe im Formular")
-                else:
-                    return render(request, self.template_name, {'obj_data': obj_data})
+                        messages.error(request, 'Bitte Dateinamen eingeben.')
+                return render(request, self.template_name, {'obj_data': obj_data})
             else:
-                return HttpResponse("Objekt nicht gefunden")
+                messages.error(request, 'Objekt nicht gefunden')
         else:
-            return HttpResponse("Ungültiger Index")
+            messages.error(request, 'Ungültiger Index')
 
+        return render(request, self.template_name, {})
 
-# URLs von den Objekten der Startseite abrufen
+# Retrieve URLs from the objects on the start page
 def fetch_url():
     URL = 'https://www.justiz.nrw.de/JM/doorpage_online_verfahren_projekte/projekte_fuer_den_buerger/zvg_auskunft/index.php#zvg_search'
     r = requests.get(URL)
@@ -213,15 +248,15 @@ def fetch_url():
 #endregion
 
 
-#region Ortsauswahl
-# Auswahl Stadt
+#region Location selection
+# Select city and radius/postcode
 class SelectedCityView(View):
     template_name = 'city_selection.html'
     
     def get(self, request):
         city_data = fetch_and_process_city_data()
         city_radius = fetch_and_process_radius_data()
-        radius_data = [{'value': key, 'text': value['Text']} for key, value in city_radius.items()]
+        radius_data = [{'value': key, 'text': value['zvgRtxt']} for key, value in city_radius.items()]
 
         context = {
             'city_data': city_data,
@@ -231,19 +266,26 @@ class SelectedCityView(View):
         return render(request, self.template_name, context)
     
 
-# View Auswahl Stadt
+# View Select city
 class ObjectView(View):
     template_name = 'object_data.html'
 
     def get(self, request):
         selected_city = request.GET.get('city')
+        header = self.fetch_header(selected_city)
         data = self.fetch_data(selected_city)
-        return render(request, self.template_name, {'data': data})
+        return render(request, self.template_name, {'data': data , 'header': header})
 
     def post(self, request):
         selected_city = request.POST.get('city')
         return self.fetch_data(selected_city)
 
+    def fetch_header(self, selected_city):
+        header_data = fetch_and_process_city_data().get(selected_city)
+        txt = header_data.get('zvgTXT')
+        header = f'Übersicht über bis zu 10 aktuelle Versteigerungstermine des Amtsgerichts {txt}'
+        return header
+        
     def fetch_data(self, selected_city):
         city_data = fetch_and_process_city_data().get(selected_city)
         zvg_id = city_data.get('zvgID')
@@ -280,7 +322,7 @@ class ObjectView(View):
         return data
 
 
-#View Radius und ausgewählter Umkreis
+#View Radius and selected perimeter
 class ObjectDataRadiusView(View):
     template_name = 'object_data_radius.html'
 
@@ -288,15 +330,21 @@ class ObjectDataRadiusView(View):
         selected_radius = request.GET.get('zvgR')
         zip_or_city = request.GET.get('zvgZIPorCity')
         data_radius = self.fetch_data(selected_radius, zip_or_city)
-        return render(request, self.template_name, {'data_radius': data_radius})
+        header = self.fetch_header(selected_radius, zip_or_city)
+        return render(request, self.template_name, {'data_radius': data_radius, 'header': header})
 
     def post(self, request):
         selected_radius = request.POST.get('zvgR')
         zip_or_city = request.POST.get('zvgZIPorCity')
         return self.fetch_data(selected_radius, zip_or_city)
     
+    def fetch_header(self, selected_radius, zip_or_city):
+        header_data = fetch_and_process_radius_data().get(selected_radius, zip_or_city)
+        radius = header_data.get('zvgR')
+        header = f'Übersicht über bis zu 10 aktuelle Versteigerungstermine im Umkreis von {radius} km in {zip_or_city}'
+        return header
+    
     def fetch_data(self, selected_radius, zip_or_city):
-        print("zip_or_city:", zip_or_city)
         radius_data = fetch_and_process_radius_data().get(selected_radius)
         zvgRadius = radius_data.get('zvgR')
         URL = f'https://www.justiz.nrw.de/JM/doorpage_online_verfahren_projekte/projekte_fuer_den_buerger/zvg_auskunft/index.php?zvgId=&zvgZIPorCity={zip_or_city}&zvgRadius={zvgRadius}&x=24&y=14&formIsSent=1#zvg_search'
@@ -316,22 +364,27 @@ class ObjectDataRadiusView(View):
                 info_header = strong_tag.get_text() if strong_tag else ''
 
                 obj_text = columns[0].get_text().replace(info_header, '').strip()
+                
                 address, verkehrswert_with_additional_text = obj_text.split('Verkehrswert:', 1)
-                verkehrswert, amtsgericht = verkehrswert_with_additional_text.split('Amtsgericht', 1)
-                address = address.strip()
-                verkehrswert = f"Verkehrswert: {verkehrswert.strip()}" if verkehrswert else ''
+    
+                verkehrswert_and_amtsgericht = verkehrswert_with_additional_text.split('Amtsgericht', 1)
+
+                if len(verkehrswert_and_amtsgericht) >= 2:
+                    verkehrswert, amtsgericht = verkehrswert_and_amtsgericht
+                else:
+                    verkehrswert = verkehrswert_with_additional_text.strip()
 
                 date = columns[1].find('time').get_text() if columns[1].find('time') else ''
 
                 city_url_data = fetch_radius_url(selected_radius, zip_or_city)
                 city_url = city_url_data[index - 1] if index <= len(city_url_data) else None
 
-                data1.append((info_header, address, verkehrswert, amtsgericht, date, city_url))
+                data1.append((info_header, address, verkehrswert, date, city_url))
                 
         return data1
 
 
-# Ansicht der Objektdetails, Auswahl Stadt
+# View object details, select city
 class ObjectCityDetailView(View):
     template_name = 'object_city_details.html'
 
@@ -471,7 +524,7 @@ def fetch_and_process_city_data():
         options = select.find_all('option')
 
         for index, option in enumerate(options):
-            if index >= 1:
+            if index >= 0:
                 zvgID = option.get('value')
                 zvgTXT = option.get_text()
                 zvgIDs.append((zvgID, zvgTXT))
@@ -480,7 +533,7 @@ def fetch_and_process_city_data():
     for zvgID, zvgTXT in zvgIDs:
         city_data[zvgTXT] = {
             'zvgID': zvgID,
-            'header': f'Übersicht über bis zu 10 aktuelle Versteigerungstermine des Amtsgerichts {zvgTXT}'
+            'zvgTXT': zvgTXT
         }
     return city_data
 
@@ -504,12 +557,12 @@ def fetch_and_process_radius_data():
     for zvgR, zvgRtxt in zvgRadius:
         radius_data[zvgR] = {
             'zvgR': zvgR,
-            'Text': zvgRtxt
+            'zvgRtxt': zvgRtxt
         }
 
     return radius_data
 
-# URLs der Objekte, Auswahl Stadt
+# URLs of the objects, selection city
 def fetch_city_url(selected_city):
     cached_urls = cache.get(f'zvg_urls_{selected_city}')
     if cached_urls:
@@ -595,8 +648,8 @@ def _fetch_radius_url_without_cache(selected_radius, zip_or_city):
 #endregion
 
 
-#region Objektsuche
-# Objektsuche /Ort/Typ
+#region Object search
+# Object search location/type
 class DetailSearch(View):
     template_name = 'detail_search.html'
 
@@ -656,7 +709,7 @@ class DetailSearch(View):
             obj_art = [{'text': option.text.strip(), 'value': option.get('value', None)} for option in obj_arts]
         return obj_art
     
-#extrahieren des Arrays BundeslandArrayId vom script
+# Extraction of the array BundeslandArrayId from the script
 def fetch_staedte_ID():
     URL = 'https://www.zvg-portal.de/index.php?button=Termine%20suchen'
     response = requests.get(URL)
@@ -677,7 +730,7 @@ def fetch_staedte_ID():
 
     return bundesland_staedteID_data
 
-#extrahieren des Arrays BundeslandArray vom script
+# Extract the array BundeslandArray from the script
 def fetch_staedte():
     URL = 'https://www.zvg-portal.de/index.php?button=Termine%20suchen'
     response = requests.get(URL)
@@ -699,8 +752,9 @@ def fetch_staedte():
         }
 
     return bundesland_staedte_data
-    
-#Liste der Termine Objektsuche
+
+
+# List of dates Object search
 class TerminObjektlisteView(View):
     template_name = 'objekt_liste.html'
     external_url = 'https://www.zvg-portal.de/index.php?button=Suchen&all=1'
@@ -708,9 +762,10 @@ class TerminObjektlisteView(View):
     def post(self, request):
         form_data = self.extract_form_data(request)
         response = requests.post(self.external_url, data=form_data)
-        extracted_data = self.extract_data(response.text)
+        datas = self.extract_data(response.text)
+        #datas = self.test_fetch_data(response.text)
 
-        return render(request, self.template_name, {'extracted_data': extracted_data})
+        return render(request, self.template_name, {'datas': datas})
 
     def extract_form_data(self, request):
         ger_name = request.POST.get('ger_name')
@@ -744,73 +799,131 @@ class TerminObjektlisteView(View):
         }
 
         return form_data
-
+    
     def extract_data(self, html_content):
-        soup = BeautifulSoup(html_content, 'html.parser')
-        tr_tags = soup.find_all('tr')
-        extracted_data = []
+            soup = BeautifulSoup(html_content, 'html.parser')
+            tr_tags = soup.find_all('tr')
+            extracted_data = []
 
-        objekttyp_value = None
-        adresse = None
-        amtsgericht_value = None
-        verkehrswert_value = None
-        termin_value = None
-        link_value = None
+            objekttyp_value = None
+            adresse = None
+            amtsgericht_value = None
+            verkehrswert_value = None
+            termin_value = None
+            link_value = None
 
-        for tr_tag in tr_tags:
-            td_tags = tr_tag.find_all('td')
-            
-            if td_tags and 'Aktenzeichen' in td_tags[0].get_text():
-                link_tag = td_tags[1].find('a')
-                if link_tag:
-                    url = f'https://www.zvg-portal.de/'
-                    link = link_tag['href']
-                    session_ID = '&sessionId=VNP21qQE09'
-                    link_value = url + link + session_ID
-                    
-            if td_tags and 'Objekt/Lage' in td_tags[0].get_text():
-                objekttyp_value = td_tags[1].find('b').get_text(strip=True).rstrip(':')
-
-            if td_tags and 'Objekt/Lage' in td_tags[0].get_text():
-                adresse_tag = td_tags[1]
-                if adresse_tag:
-                    adresse_value = adresse_tag.get_text(strip=True)
-                    adresse_parts = adresse_value.split('</b>')
-                    adresse = [part.split(':')[-1].strip() for part in adresse_parts]
-
-            if td_tags and 'Amtsgericht' in td_tags[0].get_text():
-                amtsgericht_tag = td_tags[1].find('b')
-                if amtsgericht_tag:
-                    amtsgericht_value = amtsgericht_tag.get_text(strip=True).replace('in ', '')
-
-            if td_tags and 'Termin' in td_tags[0].get_text():
-                termin_value = td_tags[1].get_text(strip=True)
-
-            if td_tags and 'Verkehrswert in €' in td_tags[0].get_text():
-                verkehrswert_tag = td_tags[1].find('p')
-                if verkehrswert_tag:
-                    verkehrswert_value = verkehrswert_tag.get_text(strip = True)
-
-            if objekttyp_value is not None and amtsgericht_value is not None and adresse is not None and termin_value is not None and link_value is not None:
-                extracted_data.append({
-                    'Link': link_value,
-                    'Objekttyp': objekttyp_value,
-                    'Adresse': adresse,
-                    'Amtsgericht': amtsgericht_value,
-                    'Verkehrswert': verkehrswert_value,
-                    'Termin': termin_value
-                })
-                link_value = None
-                objekttyp_value = None
-                adresse = None
-                amtsgericht_value = None
-                verkehrswert_value = None
-                termin_value = None
-
-        return extracted_data
+            for tr_tag in tr_tags:
+                td_tags = tr_tag.find_all('td')
+                
+                if td_tags and 'Aktenzeichen' in td_tags[0].get_text():
+                    link_tag = td_tags[1].find('a')
+                    if link_tag:
+                        url = f'https://www.zvg-portal.de/'
+                        link = link_tag['href']
+                        session_ID = '&sessionId=VNP21qQE09'
+                        link_value = url + link + session_ID
                         
+                if td_tags and 'Objekt/Lage' in td_tags[0].get_text():
+                    objekttyp_value = td_tags[1].find('b').get_text(strip=True).rstrip(':')
 
-#Objektdetails der Deteilsuche/Terminliste
+                if td_tags and 'Objekt/Lage' in td_tags[0].get_text():
+                    adresse_tag = td_tags[1]
+                    if adresse_tag:
+                        adresse_value = adresse_tag.get_text(strip=True)
+                        adresse_parts = adresse_value.split('</b>')
+                        adresse = [part.split(':')[-1].strip() for part in adresse_parts]
+
+                if td_tags and 'Amtsgericht' in td_tags[0].get_text():
+                    amtsgericht_tag = td_tags[1].find('b')
+                    if amtsgericht_tag:
+                        amtsgericht_value = amtsgericht_tag.get_text(strip=True).replace('in ', '')
+
+                if td_tags and 'Termin' in td_tags[0].get_text():
+                    termin_value = td_tags[1].get_text(strip=True)
+
+                if td_tags and 'Verkehrswert in €' in td_tags[0].get_text():
+                    verkehrswert_tag = td_tags[1].find('p')
+                    if verkehrswert_tag:
+                        verkehrswert_value = verkehrswert_tag.get_text(strip = True)
+
+                if objekttyp_value is not None and amtsgericht_value is not None and adresse is not None and termin_value is not None and link_value is not None:
+                    extracted_data.append({
+                        'Link': link_value,
+                        'Objekttyp': objekttyp_value,
+                        'Adresse': adresse,
+                        'Amtsgericht': amtsgericht_value,
+                        'Verkehrswert': verkehrswert_value,
+                        'Termin': termin_value
+                    })
+                    link_value = None
+                    objekttyp_value = None
+                    adresse = None
+                    amtsgericht_value = None
+                    verkehrswert_value = None
+                    termin_value = None
+            print(extracted_data)
+            return extracted_data
+
+    def test_fetch_data(self, html_content):
+        soup = BeautifulSoup(html_content, 'html.parser')
+        rows = soup.find_all('tr')
+
+        data_list = []
+
+        for row in rows:
+            columns = row.find_all(['td', 'th'])
+
+            if columns:
+                label = columns[0].get_text(strip=True)
+
+                if columns[0].find('hr') is not None:
+                    # If hr is found, it signifies a new object, so you can print and clear the data_list
+                    if data_list:
+                        print("Object Data:", data_list)
+                        data_list.clear()
+                else:
+                    value = columns[1].get_text(strip=True) if len(columns) > 1 else ""
+
+                    if 'Aktenzeichen' in label:
+                        aktz = value
+                        data_list.append(aktz)
+                        #print(aktz)
+
+                    if 'Amtsgericht' in label:
+                        amt = value
+                        data_list.append(amt)
+                        #print(amt)
+
+                    if 'Objekt/Lage' in label:
+                        objekttyp = columns[1].find('b').get_text(strip=True).rstrip(':')
+                        data_list.append(objekttyp if objekttyp else "")
+                        #print(objekttyp)
+
+                        adresse_value = value
+                        adresse_parts = adresse_value.split('</b>')
+                        adresse = [part.split(':')[-1].strip() for part in adresse_parts]
+                        data_list.append(adresse[0])
+                        #print(adresse[0])
+
+                    if 'Verkehrswert in €' in label:
+                        verkehrswert_tags = columns[1].find_all('p')
+                        for tag in verkehrswert_tags:
+                            verkw = tag.get_text(strip=True)
+                            data_list.append(verkw)
+                            #print(verkw)
+
+                    if 'Termin' in label:
+                        termin_tag = columns[1].find('b')
+                        termin_text = termin_tag.get_text(strip=True) if termin_tag else ""
+                        termin_tag2 = columns[1].get_text(strip=True)
+                        termin = termin_text or termin_tag2
+                        data_list.append(termin)
+                        #print(termin)
+            
+        return data_list
+
+           
+# Object details of the part search/date list
 class ObjektdetailsSucheView(View):
     temaplate_name = 'objektdetails.html'
 
@@ -823,7 +936,7 @@ class ObjektdetailsSucheView(View):
 #endregion
 
 
-#region alle Objekte
+#region all objects
 class ObjectItem:
     
     def __init__(self, info_header, obj_text, date, url):
@@ -833,7 +946,7 @@ class ObjectItem:
         self.url = url
 
 
-# Alle Objekte
+# View all objects
 class AllObjectsView(View):
     template_name = 'all_objects_details.html'
     items_per_page = 10
@@ -855,16 +968,22 @@ class AllObjectsView(View):
         except EmptyPage:
             all_objects = paginator.page(paginator.num_pages)
 
-        return render(request, self.template_name, {'all_objects': all_objects})
+        if 'HTTP_X_REQUESTED_WITH' in request.headers and request.headers['HTTP_X_REQUESTED_WITH'] == 'XMLHttpRequest':
+            html_content = render_to_string(self.template_name, {'all_objects': all_objects})
+            return JsonResponse({'html_content': html_content})
+        else:
+            return render(request, self.template_name, {'all_objects': all_objects})
     
-    def fetch_and_process_data(self):
+    def fetch_and_process_data(self, page=1):
         dict_city = fetch_and_process_city_data()
         all_objects = []
+
+        start_index = (page - 1) * self.items_per_page
+        end_index = start_index + self.items_per_page
 
         for city, city_data in dict_city.items():
             city_datas = city_data
             zvgID = city_datas['zvgID']
-            header = city_datas['header']
             URL = f'https://www.justiz.nrw.de/JM/doorpage_online_verfahren_projekte/projekte_fuer_den_buerger/zvg_auskunft/index.php?zvgId={zvgID}&x=21&y=12&zvgZIPorCity=&zvgRadius=0&formIsSent=1#zvg_search'
             data = []
 
@@ -876,7 +995,7 @@ class AllObjectsView(View):
                 zvg_urls = fetch_url()
                 rows = table.find_all('tr')
 
-                for index, row in enumerate(rows[1:], start=1):
+                for index, row in enumerate(rows[start_index:end_index], start=start_index + 1):
                     columns = row.find_all('td')
 
                     if len(columns) >= 2:
@@ -907,11 +1026,12 @@ class AllObjectsView(View):
                 all_objects.extend(data)
 
         return all_objects
+
 #endregion
 
 
-#region Amtsgerichte
-#Auswahl Bundesland für Liste Amtsgerichte
+#region Local courts
+# Selection of federal state for list of local courts
 class AmtsgerichteView(View):
     template_name = 'amtsgerichte.html'
 
@@ -939,9 +1059,8 @@ class AmtsgerichteView(View):
 
 """
 class AmtsgerichteStaedte(View):
-    template_name = 'bdl_city.html'
+    template_name = 'staedte.html'
 """
-
 
 #endregion        
 
@@ -951,11 +1070,9 @@ class AmtsgerichteStaedte(View):
 - Liste Amtsgerichte hinzufügen
 """
 
-#region Daten extrahieren
+#region extracting data
 def fetch_object_data(url):
-
     response = requests.get(url)
-
     soup = BeautifulSoup(response.text, 'html.parser')
     table = soup.find('table', {'id' : 'anzeige'})
 
@@ -1014,6 +1131,7 @@ def fetch_object_data(url):
                 'Termin' : date,
                 'Ort_der_Versteigerung' : auction_venue,
             }
+            
 
             return [details_dict]
 #endregion

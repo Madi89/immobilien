@@ -2,6 +2,7 @@
 
 {% block title %}Detailsuche{% endblock %}
 
+<!-- Form detail search -->
 {% block content %}
 <section class="section_bdl_select">
     <div class="section_detail_search">
@@ -20,18 +21,17 @@
                             </select>
                         </td>
                         <td>
-                            <label for="stadt"><Strong>Stadt:<sup><font color="red">*</font></sup></Strong></label>
+                            <label for="stadt"><Strong>Stadt:</Strong></label>
                             <select class="inputfield" name="ger_id" id="stadt">
-                                <!-- Die Städte werden hier dynamisch eingefügt -->
+                                <!-- The cities are inserted dynamically here -->
                             </select>
                         </td>
                     </tr>
                     <tr>
                         <td>
-                            <label for="objektart"><Strong>Objektart:</Strong></label>
-                            <input class="inputfield1" name="obj" id="obj" size="50" placeholder="Eigene Beschreibung">
+                            <label for="objektart"><Strong>Objektart: &nbsp;</Strong></label>
+                            <input class="userinput" name="obj" id="obj" size="50" placeholder="Eigene Beschreibung">
                         </td>
-
                     </tr>
                     <tr>
                         <td>
@@ -54,10 +54,8 @@
                 <button type="reset" onclick="reset_form()">Zurücksetzen</button>
                 <button type="submit">Suchen</button>
             </div>
+            <br>
         </form>
-    </div>
-    <div class="section_detail_search">
-        <h3>Letzten gespeicherten Suchanfragen: </h3>
     </div>
 </section>
 <style>

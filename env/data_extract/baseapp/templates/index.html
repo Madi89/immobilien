@@ -1,22 +1,18 @@
 {% extends "base.html" %}
 {% load static %}
-{% block title %}Startseite{% endblock %}
+{% load i18n %}
+{% block title %} {% trans "Startseite" %} {% endblock %}
 
 {% block content %}
-{% if messages %}
-<div class="alert alert-danger error-message" id="error-message">
-    <ul>
-        {% for message in messages %}
-        <li>{{ message }}</li>
-        {% endfor %}
-    </ul>
-</div>
-{% endif %}
+
+<form id="csrf-form" style="display: none;">
+    {% csrf_token %}
+</form>
 
 <section id="objectDetailsContent" class="section_obj_details">
 
     <br>
-    <h5>Zuletzt veröffentlichte Termine</h5>
+    <h5>{% trans "Zuletzt veröffentlichte Termine" %}</h5>
     <br>
 
     <table class="display_table">
@@ -33,7 +29,9 @@
                 <td>
                     <div class="txt">
                         <strong>
-                            <a class="header-link" href="{% url 'object_details' forloop.counter0 %}" title="Objektdetails">{{ header }}<br></a>
+                            <a class="header-link" href="{% url 'object_details' forloop.counter0 %}" title="Objektdetails">
+                                {{ header }}<span class="material-symbols-outlined" style="font-size: 14px; text-align: center;">left_click</span><br>
+                            </a>
                         </strong>
                         {{ address }}<br>
                         {{ verkehrswert }}<br>
@@ -47,6 +45,54 @@
         </tbody>
     </table>   
 </section>
+<script>
+    $(document).ready(function () {
+        function getCSRFToken() {
+            return $('input[name="csrfmiddlewaretoken"]').val();
+        }
+
+        function updateTable(data) {
+            var tableBody = $('#objectDetailsContent tbody');
+            tableBody.empty();
+
+            data.forEach(function (item, index) {
+                if (item && item.length === 6) {
+                    var row = $('<tr>');
+                
+                    var detailsUrl = "{% url 'object_details' 0 %}".replace('0', index);
+                    var headerCell = $('<td>').html('<div class="txt"><strong><a class="header-link" href="' + detailsUrl + '" title="Objektdetails">' + item[0] + '<span class="material-symbols-outlined" style="font-size: 14px; text-align: center;">left_click</span><br></a></strong>' + item[1] + '<br>' + item[2] + '<br>' + item[3] + '</div>');
+                    var dateCell = $('<td>').addClass('date').text(item[4]);
+                    var linkCell = $('<td>').addClass('link').html('<a href="' + item[5] + '" title="Objektlink" target="_blank"><span class="material-symbols-outlined">Link</span></a>');
+
+                    row.append(headerCell, dateCell, linkCell);
+                    tableBody.append(row);
+                }
+            });
+        }
+
+        function fetchData() {
+            $.ajax({
+                type: 'POST',
+                url: window.location.href,
+                dataType: 'json',
+                data: {
+                    csrfmiddlewaretoken: getCSRFToken(),
+                },
+                success: function (data) {
+                    if (data && data.data1) {
+                        updateTable(data.data1);
+                    }
+                },
+                error: function (error) {
+                    console.error('Fehler bei der AJAX-Anfrage:', error);
+                }
+            });
+        }
+
+        fetchData();
+    });
+</script>
+
 {% endblock %}
 <style>
     .custom-dropdown {

@@ -85,26 +85,57 @@
             {% endfor %}
         </section>
         <section class="download-forms">
-        <form class="section_btn" action="{% url 'object_details' url_index=0 %}" method="get" onsubmit="return validateForm()">
-            <input type="hidden" name="download_pdf" value="1">
-            <input type="text" name="file_name" placeholder="Dateiname">
-            <button type="submit">PDF herunterladen</button>
-        </form>
+            <form class="section_btn" action="{% url 'object_details' url_index=0 %}" method="get" onsubmit="return validateForm()">
+                <input type="hidden" name="download_pdf" value="1">
+                <input type="text" name="file_name" placeholder="Dateiname">
+                <button type="submit">PDF herunterladen</button>
+            </form>
         </section>
+        <div id="customAlert" class="modal">
+            <div class="modal-content">
+                <span class="material-symbols-outlined">error</span>
+                <p id="alertMessage"></p>
+                <span class="close">&times;</span>
+            </div>
+        </div>
     {% else %}
         <p>Objektdetails nicht verfügbar</p>
     {% endif %}
 
     <script>
         function validateForm() {
-            var fileNameInput = document.getElementById('file_name');
-            var fileName = fileNameInput.value.trim();
+            var form = document.forms[0];
+            var fileNameInput = form.elements['file_name'];
 
-            if (fileName === '') {
-                alert('Bitte geben Sie einen Dateinamen ein.');
+            if (!fileNameInput.value) {
+                showAlert('Bitte Dateinamen eingeben.');
                 return false;
             }
+
             return true;
+        }
+
+        function showAlert(message) {
+            var modal = document.getElementById('customAlert');
+            var alertMessage = document.getElementById('alertMessage');
+            
+            alertMessage.textContent = message;
+            modal.style.display = 'block';
+
+            setTimeout(function () {
+                modal.style.display = 'none';
+            }, 3000);
+
+            var closeButton = document.querySelector('.close');
+            closeButton.addEventListener('click', function() {
+                modal.style.display = 'none';
+            });
+
+            window.addEventListener('click', function(event) {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
         }
     </script>
 {% endblock %}

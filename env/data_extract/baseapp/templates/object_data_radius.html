@@ -9,9 +9,12 @@
     </strong>
 </a>
 
-<h5>{{ header }}</h5>
-
 <section id="objectDetailsContent" class="section_obj_details">
+    {% if header in header %}
+        <br>
+        <h4>{{ header }}</h4>
+        <br>
+    {% endif %}
     <table class="display_table">
         <thead>
             <tr>
@@ -22,7 +25,7 @@
         </thead>
 
         <tbody>
-            {% for info_header, address, verkehrswert, amtsgericht, date, city_url in data_radius %}
+            {% for info_header, address, verkehrswert, date, city_url in data_radius %}
             <tr>
                 <td>
                     <div class="txt">
@@ -31,7 +34,6 @@
                         </strong>
                         {{ address }}<br>
                         {{ verkehrswert }}<br>
-                        Amtsgericht {{ amtsgericht }}
                     </div>
                 </td>
                 <td class="date">{{ date }}</td>

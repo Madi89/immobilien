@@ -43,4 +43,26 @@
     </span>
 </div>
 </section>
+<script>
+    $(document).ready(function () {
+        // AJAX-Function for paginatio
+        $('#pagination-links a').on('click', function (event) {
+            event.preventDefault();
+            var url = $(this).attr('href');
+
+            // AJAX-Call
+            $.ajax({
+                url: url,
+                type: 'get',
+                dataType: 'json', 
+                success: function (data) {
+                    $('#objectDetailsContent').html(data.html_content);
+                },
+                error: function (error) {
+                    console.log(error);
+                }
+            });
+        });
+    });
+</script>
 {% endblock %}

@@ -8,10 +8,12 @@
         <span class="material-symbols-outlined">arrow_left_alt</span>
     </strong>
 </a>
-
-<h5>{{ header }}</h5>
-
 <section id="objectDetailsContent" class="section_obj_details">
+    {% if header in header %}
+        <br>
+        <h4>{{ header }}</h4>
+        <br>
+    {% endif %}
     <table class="display_table">
         <thead>
             <tr>

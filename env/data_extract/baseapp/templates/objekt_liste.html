@@ -8,7 +8,6 @@
         <span class="material-symbols-outlined">arrow_left_alt</span>
     </strong>
 </a>
-
 <section id="objectDetailsContent" class="section_obj_details">
     <table class="display_table">
         <thead>
@@ -20,27 +19,33 @@
         </thead>
 
         <tbody>
-            {% for entry in extracted_data %}
-            <tr>
-                <td>
-                    <div class="txt">
-                        <strong>
-                            <a class="header-link" title="Objektdetails" href="{% url 'objektdetails' %}?selected_link={{ entry.Link }}">{{ entry.Objekttyp }}<br></a>
-                        </strong>
-                        {{ entry.Adresse.0 }}<br>
-                        {% if entry.Verkehrswert %}
-                            {{ entry.Verkehrswert}}<br>
-                        {% endif %}
-                        Amtsgericht {{ entry.Amtsgericht }}
-                    </div>
-                </td>
-                <td class="date">{{ entry.Termin }}</td>
-                <td class="link">
-                    <a href="{{ entry.Link }}" title="Objektlink" target="_blank">
-                        <span class="material-symbols-outlined">Link</span>
-                    </a>
-                </td>
-            </tr>
+            {% for entry in datas %}
+                <tr>
+                    <td>
+                        <div class="txt">
+                            <strong>
+                                {% if entry.Link %}
+                                    <a class="header-link" title="Objektdetails" href="{% url 'objektdetails' %}?selected_link={{ entry.Link }}">
+                                        {{ entry.Objekttyp }}<br>
+                                    </a>
+                                {% else %}
+                                    <span class="missing-data">Objekttyp nicht vorhanden</span><br>
+                                {% endif %}
+                            </strong>
+                            {{ entry.Adresse.0 }}<br>
+                            {% if entry.Verkehrswert %}
+                                {{ entry.Verkehrswert }}<br>
+                            {% endif %}
+                            {{ entry.Amtsgericht }}
+                        </div>
+                    </td>
+                    <td class="date">{{ entry.Termin }}</td>
+                    <td class="link">
+                        <a href="{{ entry.Link }}" title="Objektlink" target="_blank">
+                            <span class="material-symbols-outlined">Link</span>
+                        </a>
+                    </td>
+                </tr>
             {% endfor %}
         </tbody>
     </table>

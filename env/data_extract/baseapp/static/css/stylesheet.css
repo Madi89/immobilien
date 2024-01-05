@@ -64,8 +64,21 @@ body {
 	background: var(--color-info-dark);
 	width: 100%;
 	margin: 0 auto;
+	padding-bottom: 5%;
 	gap: 1.8rem;
 	grid-template-columns: 14rem auto;
+}
+
+.footer{
+	width: 100%;
+	background: var(--color-info-dark);
+	padding: 0.5%;
+	text-align:center;
+}
+
+.footer h5{
+	color: var(--color-white);
+	font-size:0.65rem;
 }
 
 main .section_bdl_select
@@ -278,6 +291,14 @@ main .section_detail_search h3 {
 	color: var(--color-font);
 }
 
+main .userinput {
+	width: 14.1em; 
+	border: 0.0625rem solid var(--color-dark-variant); 
+	border-radius: var(--border-radius);
+	font-size: 1em; 
+	padding: 0.25rem;
+}
+
 main .form-last-row {
 	display: flex;
 	align-items: center;
@@ -296,16 +317,16 @@ main .form-last-row h3 {
 
 main .form-last-row button {
 	width: 8.25rem;
-	margin: 0 30px;
+	margin: 0 1.875rem;
 	padding: 0.60rem 1.10rem;
 	background-color: var(--color-white); 
 	color: var(--color-font);
-	border: 1px solid var(--color-dark-variant);
+	border: 0.0625rem solid var(--color-dark-variant);
 	border-radius: var(--border-radius);
 	cursor: pointer;
 }
 
-main .form-last-row button:hover{
+main .form-last-row button:hover {	
 	background-color: var(--color-dark-variant); 
 	color: var(--color-white); 
 	border: none;
@@ -319,7 +340,7 @@ main h4 {
 main .section_btn {
 	display: flex;
 	flex-direction: row;
-	max-width: 35rem; 
+	max-width: 32rem; 
 	margin: 2rem auto; 
 	align-items: center;
 }
@@ -328,7 +349,7 @@ main .section_btn input {
 	padding: var(--padding-4);
 	width: 20rem;
 	height: 2rem;
-	border-radius: 0,3125rem;
+	border-radius: 0.3125rem;
 	box-sizing: border-box;
 	gap: 2rem;
 }
@@ -373,10 +394,10 @@ main .table_objektsuche tbody tr td {
 }
 
 main thead th{
-    background-image: linear-gradient(to bottom, var(--color-dark-variant) 3px, transparent 3px);
+    background-image: linear-gradient(to bottom, var(--color-dark-variant) 0.1875rem, transparent 0.1875rem);
     background-repeat: repeat-x;
     background-position: left bottom;
-    background-size: 100% 3px;
+    background-size: 100% 0.1875rem;
 }
 
 main thead th {
@@ -387,7 +408,7 @@ main thead th {
 
 main tbody td {
 	height: 2.8rem;
-	border-bottom: 1px;
+	border-bottom: 0.0625rem;
 	padding: 0.5rem 0.5rem;
 }
 
@@ -417,7 +438,7 @@ th.object {
 }
 
 tr.row {
-	margin-bottom: 50px;
+	margin-bottom: 3,125rem;
 }
 
 td.date {
@@ -455,7 +476,7 @@ h5, label {
 }
 
 .inputfield {
-    margin-right: 10px;
+    margin-right: 0.625rem;
 }
 
 .section_bdl .btn_amtg,
@@ -493,13 +514,13 @@ h5, label {
 }
 
 .inputfield{
-	border: 1px solid #555555; 
+	border: 0.0625rem solid #555555; 
 	border-radius: 0.25rem; 
 	font-size: 1em;
 }
 
 .inputfield2{
-	border: 1px solid #555555; 
+	border: 0.0625rem solid #555555; 
 	width: 15em; 
 	border-radius: 0.25rem; 
 	font-size: 1.05em;
@@ -509,16 +530,109 @@ h5, label {
 	text-align: center;
 }
 
-.error-message {
-	height: 50px;
-	border-radius: 5px;
-	background-color: #6c757d;
-	color: white;
-	font-weight: bold;
-	box-shadow: 12px 12px 12px #e61c66;
-	text-align: center;
-  }
-
-.error-message ul {
-    list-style: none;
+.download-forms {
+    margin: auto;
+    align-items: center;
 }
+
+.error-message-container {
+    margin: auto;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;  
+    align-items: center;
+}
+
+.error-messages span.material-symbols-outlined {
+	position: absolute;
+	top: 50%;
+	transform: translateY(-50%);
+	left: 0.625rem;
+	width: 1.25rem;
+	line-height: 1.5;
+	color: #ff0000;
+}
+
+.error-messages {
+	position: relative;
+	padding: 0.625rem;
+	background-color: #ffeeee;
+	color: #ff0000;
+	font-size: 0.875rem;
+	font-weight: bold;
+	width: 50%;
+	text-align: center;
+	position: relative;
+	border-radius: 0.125rem;
+}
+
+.error-messages::before {
+	content: "";
+	position: absolute;
+	top: 0;
+	left: 0;
+	bottom: 0;
+	width: 0.375rem;
+	background-color: var(--color-danger);
+}
+
+.close-message {
+	position: absolute;
+	top: 50%;
+	transform: translateY(-50%);
+	right: 0.3125rem;
+	width: 1.25rem;
+	line-height: 1.5;
+	cursor: pointer;
+	color: #ff0000;
+}
+
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.4);
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 15% auto;
+    padding: 1.25rem;
+    border: 0.0625rem solid var(--color-info-dark);
+    border-left: 0.5rem solid var(--color-info-dark);
+    width: 30%;
+    display: flex; 
+    align-items: center; 
+    justify-content: space-between; 
+	border-radius: 0.3125rem;
+}
+
+.modal-content span.material-symbols-outlined {
+	color: var(--color-info-dark);
+	font-size: 2.18rem;
+}
+
+#alertMessage {
+    margin-left: 0.5rem; 
+    flex: 1;
+}
+
+.close {
+    color: var(--color-info-dark);
+    font-size: 1.75rem;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close:hover,
+.close:focus {
+    color: var(--color-box-shadow);
+    text-decoration: none;
+}
+
